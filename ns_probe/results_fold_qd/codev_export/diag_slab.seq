@@ -1,0 +1,28 @@
+! DIAGNOSTIC: straight-through tilted slab (NO fold, NO reflection).
+! Purpose: does CODE V find a chief ray at all with this collimated/decentered input?
+!   - traces  -> input setup is FINE; the only problem is the fold sign convention.
+!   - fails   -> the object-at-infinity + decentered-stop is the gate; fix that first.
+LEN NEW
+DIM M
+WL 587.56
+REF 1
+EPD 8.000000
+YAN 23.884815
+PRV
+PWL 587.56
+'FOLDN' 1.500000
+END
+SO 0 1e18
+! decentered aperture stop at the source
+YDE S1 9.459225
+STO S1
+THI S1 37.207328
+! tilted entry face into glass (same face-A curvature/tilt as 4_11, but NO fold after)
+S 156.054833 25.0 'FOLDN'
+ADE S2 10.876174
+! flat exit face back to air (simple, on-axis)
+S 0 40.0
+! image / detector
+SI 0 0
+CIR SI 20.0
+GO

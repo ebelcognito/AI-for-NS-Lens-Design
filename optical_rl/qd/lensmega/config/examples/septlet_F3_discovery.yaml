@@ -1,0 +1,145 @@
+# ============================================================================
+# Septlet (7-element) — Discovery at FIXED F/3, EFL=50mm, variable materials
+# ============================================================================
+# 7-element layout: crown-crown-flint-STOP-flint-crown-crown-crown
+# (3 elements in front of stop, 4 behind — slight rear-bias for field correction)
+#
+# 15 surfaces total (14 refracting + 1 stop at index 6), 43-D theta:
+#   14 curvatures + 14 gaps + 1 flange + 14 (n,V) pairs = 43
+#
+# Targets:
+#   EFL = 50 mm  (soft-penalised)
+#   F#  = 3.0    (soft-penalised — new!)
+#
+# Why this template can hit F/3 (unlike the cooke triplet):
+#   - Larger element clear apertures (up to 13 mm vs cooke's 7.5 mm) —
+#     comfortably fits the 8.33 mm marginal-ray height at F/3.
+#   - Bigger physical stop (7 mm vs cooke's 3 mm) — front group only needs
+#     ~1.2x magnification to image the stop into an 8.33 mm entrance pupil
+#     (vs the triplet needing ~2.8x magnification).
+#   - 14 free curvatures (vs triplet's 6) — enough degrees of freedom to
+#     correct higher-order aberrations alongside the 5 Seidels.
+#   - Pseudo-symmetric topology (3 + STOP + 4) — natively cancels coma and
+#     distortion via near-symmetry.
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/septlet_50mm_f3.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.486, 0.587, 0.656]
+  object_depth_mm: -20000.0
+  stop_surface_index: 6
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+
+  # --- F-number soft constraint -----------------------------------------------
+  enforce_fnum: true
+  f_number_target: 3.5
+  fnum_penalty_weight: 1.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+  variable_flange: true
+  variable_materials: true
+  free_material_indices: [0, 1, 2, 3, 4, 5, 6]   # all 7 glass elements
+
+  theta_bounds:
+    # --- 14 curvatures: bounds matched to sixlet (±0.08) since EFL=50 ---
+    - [-0.08, 0.08]      # c0   E1 front (crown)
+    - [-0.08, 0.08]      # c1   E1 back
+    - [-0.08, 0.08]      # c2   E2 front (crown)
+    - [-0.08, 0.08]      # c3   E2 back
+    - [-0.08, 0.08]      # c4   E3 front (flint)
+    - [-0.08, 0.08]      # c5   E3 back
+    - [-0.08, 0.08]      # c7   E4 front (flint)   [post-stop]
+    - [-0.08, 0.08]      # c8   E4 back
+    - [-0.08, 0.08]      # c9   E5 front (crown)
+    - [-0.08, 0.08]      # c10  E5 back
+    - [-0.08, 0.08]      # c11  E6 front (crown)
+    - [-0.08, 0.08]      # c12  E6 back
+    - [-0.08, 0.08]      # c13  E7 front (crown)   [extra back element]
+    - [-0.08, 0.08]      # c14  E7 back
+    # --- 14 gaps: physical manufacturing constraints ---
+    - [1.5, 5.0]         # g0   E1 thickness (crown glass)
+    - [0.5, 12.0]        # g1   Air gap E1→E2
+    - [1.5, 5.0]         # g2   E2 thickness (crown glass)
+    - [0.5, 12.0]        # g3   Air gap E2→E3
+    - [1.0, 4.0]         # g4   E3 thickness (flint glass)
+    - [0.5, 8.0]         # g5   Air gap E3→Stop
+    - [0.5, 8.0]         # g6   Air gap Stop→E4
+    - [1.0, 4.0]         # g7   E4 thickness (flint glass)
+    - [0.5, 12.0]        # g8   Air gap E4→E5
+    - [1.5, 5.0]         # g9   E5 thickness (crown glass)
+    - [0.5, 12.0]        # g10  Air gap E5→E6
+    - [1.5, 5.0]         # g11  E6 thickness (crown glass)
+    - [0.5, 12.0]        # g12  Air gap E6→E7
+    - [1.5, 5.0]         # g13  E7 thickness (crown glass)
+    # --- flange (last surface to sensor) ---
+    - [15.0, 50.0]       # flange (long enough for 7-element retro topology)
+    # --- materials: (n, V) per element (7 elements) ---
+    - [1.45, 1.85]       # n_0  E1 refractive index
+    - [25, 75]           # V_0  E1 Abbe number
+    - [1.45, 1.85]       # n_1  E2
+    - [25, 75]           # V_1
+    - [1.45, 1.85]       # n_2  E3
+    - [25, 75]           # V_2
+    - [1.45, 1.85]       # n_3  E4
+    - [25, 75]           # V_3
+    - [1.45, 1.85]       # n_4  E5
+    - [25, 75]           # V_4
+    - [1.45, 1.85]       # n_5  E6
+    - [25, 75]           # V_5
+    - [1.45, 1.85]       # n_6  E7
+    - [25, 75]           # V_6
+
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 1
+
+descriptor:
+  kind: seidel
+  params:
+    terms: ["S2", "S3"]
+
+algorithm:
+  population_size: 24             # bigger pop for the wider 43-D search space
+  initial_sigma: 0.5
+  cma_eta: 0.10                   # gentler than triplet — more dims to explore
+  cma_seed: 42
+  seed_count: 2000                # more seeds to cover 43-D theta well
+  calibration_count: 2000
+  iterations: 100000              # 7-element search needs more iterations than 6
+  new_cell_bonus: 1.0e6
+  log_every: 50
+  restart_patience: 3
+
+archive:
+  bins: [256, 256]
+  bounds: [[-0.001, 0.001], [-0.001, 0.001]]
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: septlet_F3
+  checkpoint_every: 200
+  device: auto
+  elite_fitness_threshold: -1.0
+  refine_efl_penalty_weight: 20.0
+  refine_invalid_penalty_weight: 10.0
+  refine_intersect_penalty_weight: 2.0
+  refine_fnum_penalty_weight: 2.0       # mild polish, not destructive
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 0.0001
+  refine_field_weights: [1.0, 2.0, 4.0]
+  refine_stability_samples: 20
+  refine_stability_perturbation: 0.005

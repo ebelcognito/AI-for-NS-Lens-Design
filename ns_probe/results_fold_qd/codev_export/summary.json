@@ -1,0 +1,123 @@
+[
+  {
+    "id": "fold_cell_1_15",
+    "cell": [
+      1,
+      15
+    ],
+    "tir": 1,
+    "fitness": 0.9617541861100385,
+    "spot": 1.580450213185654,
+    "signature": "TIR@D -> T@B"
+  },
+  {
+    "id": "fold_cell_2_8",
+    "cell": [
+      2,
+      8
+    ],
+    "tir": 2,
+    "fitness": 0.959993439399185,
+    "spot": 3.725643513294311,
+    "signature": "T@A -> TIR@D -> TIR@B"
+  },
+  {
+    "id": "fold_cell_3_5",
+    "cell": [
+      3,
+      5
+    ],
+    "tir": 3,
+    "fitness": 0.9071528329604461,
+    "spot": 2.4234148809336666,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> T@B"
+  },
+  {
+    "id": "fold_cell_4_11",
+    "cell": [
+      4,
+      11
+    ],
+    "tir": 4,
+    "fitness": 0.9141212627582844,
+    "spot": 0.6624029231166465,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@A -> TIR@T -> T@B"
+  },
+  {
+    "id": "fold_cell_5_6",
+    "cell": [
+      5,
+      6
+    ],
+    "tir": 5,
+    "fitness": 0.33413007062932415,
+    "spot": 16.544281465233198,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> T@B"
+  },
+  {
+    "id": "fold_cell_6_15",
+    "cell": [
+      6,
+      15
+    ],
+    "tir": 6,
+    "fitness": 0.7316402975912792,
+    "spot": 13.393312185997392,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@A -> TIR@A -> TIR@D -> T@B"
+  },
+  {
+    "id": "fold_cell_7_14",
+    "cell": [
+      7,
+      14
+    ],
+    "tir": 7,
+    "fitness": 0.417134678822015,
+    "spot": 3.2764306188071086,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@A -> TIR@T -> TIR@B -> TIR@D -> TIR@A -> T@B"
+  },
+  {
+    "id": "fold_cell_8_15",
+    "cell": [
+      8,
+      15
+    ],
+    "tir": 8,
+    "fitness": 0.10169191315369495,
+    "spot": 29.507024386121333,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> TIR@A -> TIR@D -> T@B"
+  },
+  {
+    "id": "fold_cell_8_6",
+    "cell": [
+      8,
+      6
+    ],
+    "tir": 9,
+    "fitness": 0.039005121127145465,
+    "spot": 36.27033381294968,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> TIR@B -> TIR@A -> T@B"
+  },
+  {
+    "id": "fold_cell_8_14",
+    "cell": [
+      8,
+      14
+    ],
+    "tir": 10,
+    "fitness": 0.04535221778953627,
+    "spot": 19.03223830661519,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@D -> TIR@A -> T@B"
+  },
+  {
+    "id": "fold_cell_8_9",
+    "cell": [
+      8,
+      9
+    ],
+    "tir": 11,
+    "fitness": 0.1280733388999314,
+    "spot": 25.450946151614033,
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> T@B"
+  }
+]

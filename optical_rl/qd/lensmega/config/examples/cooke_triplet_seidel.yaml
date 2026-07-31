@@ -1,0 +1,105 @@
+# ============================================================================
+# Cooke Triplet — Full DOF Discovery with Seidel BCs
+# ============================================================================
+# WIDE unconstrained curvature bounds — no sign pattern baked in.
+# The QD archive with Seidel BCs (S1 spherical vs S2 coma) must
+# discover good Cooke-like designs naturally from the full search space.
+#
+# POLYCHROMATIC fitness (F, d, C lines) — this is critical. The Cooke
+# triplet's crown-flint-crown glass arrangement corrects chromatic aberration.
+# Monochromatic fitness can't see this advantage; polychromatic fitness
+# rewards it, making the Cooke configuration naturally emerge as optimal.
+#
+# strict_entrance_pupil: false  — Seidel BCs are purely paraxial and always
+# computable, so we don't hard-reject designs with bad entrance pupils.
+#
+# Gap bounds are physical manufacturing constraints only, not Cooke-specific.
+#
+# Cooke nominal (for reference only — NOT baked into bounds):
+#   c0=+0.045  c1=-0.002  c2=-0.045  c3=+0.049  c5=+0.013  c6=-0.054
+#   g0=3.26  g1=6.01  g2=1.00  g3=2.12  g4=2.75  g5=2.95
+#   d_sensor=60.44  EFL=49.8
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/cooke_smaller_ap_1mm.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.486, 0.587, 0.656]
+  object_depth_mm: -20000.0
+  stop_surface_index: 4
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 5, 6]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5]
+  variable_flange: true
+
+  theta_bounds:
+    # --- 6 curvatures: fully unconstrained, any sign ---
+    - [-0.08, 0.08]      # c0  (any curvature)
+    - [-0.08, 0.08]      # c1
+    - [-0.08, 0.08]      # c2
+    - [-0.08, 0.08]      # c3
+    - [-0.08, 0.08]      # c5
+    - [-0.08, 0.08]      # c6
+    # --- 6 gaps: physical manufacturing constraints only ---
+    - [0.8, 3.2]         # g0  glass element thickness
+    - [0.5, 10.0]        # g1  air gap
+    - [0.8, 3.2]         # g2  glass element thickness
+    - [0.5, 10.0]        # g3  air gap
+    - [0.5, 10.0]        # g4  air gap
+    - [0.8, 3.2]         # g5  glass element thickness
+    # --- flange (last surface to sensor, nominal ~42 mm) ---
+    - [30.0, 65.0]       # flange
+
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 1
+
+descriptor:
+  kind: seidel
+  params:
+    terms: ["S2", "S3"]
+
+algorithm:
+  population_size: 18
+  initial_sigma: 0.5
+  cma_eta: 0.1
+  cma_seed: 42
+  seed_count: 500
+  calibration_count: 500
+  iterations: 200000
+  new_cell_bonus: 1.0e6
+  log_every: 50
+  restart_patience: 5        # consecutive no-improvement gens before restart (was 1)
+
+archive:
+  bins: [256, 256]
+  bounds: [[-0.001, 0.001], [-0.001, 0.001]]
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: cooke_triplet_seidel
+  checkpoint_every: 100
+  device: auto
+  elite_fitness_threshold: -0.2
+  # L-BFGS refiner weights (null = inherit from problem section above)
+  refine_efl_penalty_weight: 20.0
+  refine_invalid_penalty_weight: 10.0
+  refine_intersect_penalty_weight: 2.0
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 0.0001
+  # Basin stability analysis
+  refine_stability_samples: 20
+  refine_stability_perturbation: 0.005

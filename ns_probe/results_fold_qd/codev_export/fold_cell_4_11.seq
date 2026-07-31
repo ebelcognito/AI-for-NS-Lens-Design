@@ -1,0 +1,63 @@
+! CODE V export : fold_cell_4_11
+! dom_signature : T@A -> TIR@D -> TIR@B -> TIR@A -> TIR@T -> T@B
+! CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X
+! Global coords: every surface DECENTER-AND-RETURN (DAR), THI 0 -> one frame.
+! Curved faces = spheres (meridionally exact); TIR faces = TIRO (stay in glass n).
+LEN NEW
+DIM M
+WL 587.56
+REF 1
+EPD 8.000000
+YAN 23.884815
+! ---- constant-index model glass (private catalog; worked in live trace)
+PRV
+PWL 587.56
+'FOLDN' 1.500000
+END
+! ---- object at infinity (radius 0, huge thickness)
+SO 0 1e18
+! ---- S1: decentered aperture STOP at engine x=0 (input beam offset+width)
+YDE S1 9.459225
+DAR S1
+STO S1
+! S2: refract @face A (entry)
+S -156.054833 0 'FOLDN'
+YDE S2 0.000000
+ZDE S2 47.939893
+ADE S2 25.000000
+DAR S2
+! S3: tir @face D (fold)  [TIR]
+S 0 0 TIRO 'FOLDN'
+YDE S3 30.000000
+ZDE S3 47.166609
+ADE S3 90.000000
+DAR S3
+! S4: tir @face B (fold)  [TIR]
+S -197.543133 0 TIRO 'FOLDN'
+YDE S4 0.000000
+ZDE S4 75.254482
+ADE S4 15.638246
+DAR S4
+! S5: tir @face A (fold)  [TIR]
+S -156.054833 0 TIRO 'FOLDN'
+YDE S5 0.000000
+ZDE S5 47.939893
+ADE S5 25.000000
+DAR S5
+! S6: tir @face T (fold)  [TIR]
+S 0 0 TIRO 'FOLDN'
+YDE S6 -30.000000
+ZDE S6 69.553580
+ADE S6 90.000000
+DAR S6
+! S7: refract @face B (exit)
+S -197.543133 0
+YDE S7 0.000000
+ZDE S7 75.254482
+ADE S7 15.638246
+DAR S7
+! image: plane at engine x=120.0
+SI 0 0
+ZDE SI 120.000000
+DAR SI
+GO

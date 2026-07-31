@@ -1,0 +1,85 @@
+env:
+  world_width: 300
+  world_height: 300
+  source_x: 10
+  source_y: 150
+  detector_x: 290
+  detector_center_y: 150
+  detector_y_min: 145.0
+  detector_y_max: 155.0
+  detector_height: 6
+
+  # Ray targeting mode:
+  # - explicit: use ray1..ray4 target pairs below (backward-compatible default)
+  # - bundle: build a fixed deterministic bundle or a randomized per-episode FOV bundle
+  ray_mode: bundle
+
+  # Bundle mode parameters (used only when ray_mode: bundle)
+  ray_count: 5
+  ray_bundle_target_x: 290
+  ray_bundle_y_min: 140.0
+  ray_bundle_y_max: 160.0
+  ray_bundle_sampling: random_uniform_angle
+  ray_bundle_angle_min_target_x: 290
+  ray_bundle_angle_min_target_y: 130
+  ray_bundle_angle_max_target_x: 290
+  ray_bundle_angle_max_target_y: 170
+
+  # Optional scaling knobs (leave unset/null to use defaults; bundle mode defaults to per-ray scaling)
+  # power_norm_divisor: null
+  # reward_scale: null
+
+  timeout_s: 7.0
+
+  ray1_target_x: 290
+  ray1_target_y: 170
+  ray2_target_x: 290
+  ray2_target_y: 130
+  ray3_target_x: 290
+  ray3_target_y: 180
+  ray4_target_x: 290
+  ray4_target_y: 120
+  ref_index: 1.5
+  action_scale_xy: 2
+  action_scale_sag: 0.05
+  max_steps: 800
+  max_initial_power: 0.0
+  max_reset_attempts: 100
+  reset_jitter_xy: 20.0
+  reset_jitter_sag: 0.1
+  center_x: 150.0
+  center_y: 150.0
+  quadrant_margin: 5.0
+  right_side_x_max: 270.0
+  sag_min: -0.35
+  sag_max: 0.35
+
+training:
+  algorithm: PPO
+  device: cpu
+  learning_rate: 0.00005
+  n_steps: 1024
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  ent_coef: 0.0
+  total_timesteps: 1500000
+  use_persistent_runner: true
+
+callbacks:
+  eval_freq: 4096
+  checkpoint_freq: 20480
+  progress_freq: 10000
+  n_eval_episodes: 5
+  eval_verbose: 0
+
+logging:
+  results_dir: results
+  logs_dir: results/logs
+  models_dir: results/models
+  tensorboard_dir: results/tensorboard
+  visualizations_dir: results/visualizations
+
+debug:
+  verbose_timing: false
+  timing_log_interval: 5000

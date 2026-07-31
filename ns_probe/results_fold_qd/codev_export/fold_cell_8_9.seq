@@ -1,0 +1,105 @@
+! CODE V export : fold_cell_8_9
+! dom_signature : T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> T@B
+! CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X
+! Global coords: every surface DECENTER-AND-RETURN (DAR), THI 0 -> one frame.
+! Curved faces = spheres (meridionally exact); TIR faces = TIRO (stay in glass n).
+LEN NEW
+DIM M
+WL 587.56
+REF 1
+EPD 8.000000
+YAN 16.693760
+! ---- constant-index model glass (private catalog; worked in live trace)
+PRV
+PWL 587.56
+'FOLDN' 1.500000
+END
+! ---- object at infinity (radius 0, huge thickness)
+SO 0 1e18
+! ---- S1: decentered aperture STOP at engine x=0 (input beam offset+width)
+YDE S1 2.576447
+DAR S1
+STO S1
+! S2: refract @face A (entry)
+S -67.794964 0 'FOLDN'
+YDE S2 0.000000
+ZDE S2 62.639781
+ADE S2 13.320588
+DAR S2
+! S3: tir @face D (fold)  [TIR]
+S 0 0 TIRO 'FOLDN'
+YDE S3 30.000000
+ZDE S3 68.175026
+ADE S3 90.000000
+DAR S3
+! S4: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S4 0.000000
+ZDE S4 111.797697
+ADE S4 10.747341
+DAR S4
+! S5: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S5 0.000000
+ZDE S5 111.797697
+ADE S5 10.747341
+DAR S5
+! S6: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S6 0.000000
+ZDE S6 111.797697
+ADE S6 10.747341
+DAR S6
+! S7: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S7 0.000000
+ZDE S7 111.797697
+ADE S7 10.747341
+DAR S7
+! S8: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S8 0.000000
+ZDE S8 111.797697
+ADE S8 10.747341
+DAR S8
+! S9: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S9 0.000000
+ZDE S9 111.797697
+ADE S9 10.747341
+DAR S9
+! S10: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S10 0.000000
+ZDE S10 111.797697
+ADE S10 10.747341
+DAR S10
+! S11: tir @face B (fold)  [TIR]
+S -35.353033 0 TIRO 'FOLDN'
+YDE S11 0.000000
+ZDE S11 111.797697
+ADE S11 10.747341
+DAR S11
+! S12: tir @face T (fold)  [TIR]
+S 0 0 TIRO 'FOLDN'
+YDE S12 -30.000000
+ZDE S12 80.972344
+ADE S12 90.000000
+DAR S12
+! S13: tir @face A (fold)  [TIR]
+S -67.794964 0 TIRO 'FOLDN'
+YDE S13 0.000000
+ZDE S13 62.639781
+ADE S13 13.320588
+DAR S13
+! S14: refract @face B (exit)
+S -35.353033 0
+YDE S14 0.000000
+ZDE S14 111.797697
+ADE S14 10.747341
+DAR S14
+! image: plane at engine x=120.0
+SI 0 0
+ZDE SI 120.000000
+DAR SI
+GO

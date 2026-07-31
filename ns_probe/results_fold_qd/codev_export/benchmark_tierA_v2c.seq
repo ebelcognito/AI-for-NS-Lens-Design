@@ -1,0 +1,240 @@
+! ============================================================================
+! TIER A V2c -- off-axis, plane-symmetric freeform-prism eyepiece
+!
+! Revision of benchmark_tierA_v2b.seq after the second live CODE V 2026 run.
+! Geometry is UNCHANGED (verify_v2.py / check_seq_v2.py). Two fixes:
+!
+!   FIX 4 (the whole ballgame) -- GLB REPLACED BY DAR.
+!     "GLB Sn S1" -> Error: Too many surface qualifiers
+!     "GLB Sn 1"  -> Error: A global surface qualifier is expected
+!     Two guesses, two failures, so GLB is abandoned rather than guessed a third
+!     time. Every GLB failing left the LDM in "Basic Decenter", i.e. each
+!     surface's decenter measured from the PREVIOUS surface's already-tilted
+!     frame -- while the values below are authored as GLOBAL coordinates. Effect
+!     seen on run 2: surface 2 landed correctly (its base frame IS S1's frame,
+!     at the origin) so rays refracted through it properly, and every surface
+!     after it landed in a rotated, displaced frame -- hence the scattered layout
+!     and rays dying at surface 2.
+!
+!     DAR (decenter and return) applies a surface's decenter and then UNDOES it.
+!     With THI 0 through the prism the base frame never accumulates, so every
+!     YDE/ZDE/ADE below is measured from S1's frame -- exactly the global
+!     behaviour GLB was meant to give, using syntax already confirmed working in
+!     this project (CONTEXT.md section 4; that build placed surfaces exactly on
+!     the engine's own ray-hit points).
+!
+!     NOTE THE ASYMMETRY: DAR on S2..S5 (prism faces, each placed absolutely),
+!     but BASIC decenter on S6, because the relay chain after the prism needs the
+!     S6 tilt to PROPAGATE down through S7..SI. S6's base frame is S1's frame
+!     (S5 returns, and THI S5 = 0), so its YDE/ZDE/ADE are global too.
+!
+!     "Unable to find chief ray" on run 2 was a SYMPTOM of this, not a separate
+!     problem: with the stop as surface 1 in air and the object at infinity, the
+!     chief ray is simply the field-angle ray through the centre of S1 -- nothing
+!     to solve. CODE V was failing to COMPLETE it through scattered surfaces.
+!
+!   FIX 5 -- REFL TAKES NO GLASS TOKEN.
+!     "S -46.0130 0.0 REFL 'PRISM'" -> Warning: Extra data 'PRISM' ignored
+!     A reflection does not change the medium, so REFL carries no glass; CODE V
+!     correctly inherited 'PRISM' anyway (LDM run 2 showed Glass 'PRISM',
+!     Refract Mode "Reflect"). The token is dropped here to clear the warning.
+!     "TIRO 'PRISM'" WAS accepted without complaint -- keep that one as is.
+!
+! ---------------------------------------------------------------------------
+! CONFIRMED WORKING as of run 2 (do not "fix" these):
+!   - Private-catalog glasses: PRV / PWL <3 wl> / 'NAME' n1 n2 n3 / END.
+!   - "S <rdy> <thi> 'GLASS'"  and  "S <rdy> <thi> TIRO 'GLASS'".
+!   - REFL -> LDM "Reflect";  TIRO -> LDM "Only TIR".
+!   - PIK RDY/YDE/ZDE/ADE Sn Sm  (LDM showed P on surface 4).
+!   - PIM (solved the final airspace).
+!   - STO, CIR, REX, REY, ADY, SO 0 1e18, WL/REF/WTW/XAN/YAN/EPD/DIM/TIT.
+! KNOWN-BAD (do not reintroduce):
+!   - n_d/V_d pair on an S line -> silently discards the REST OF THE LINE.
+!   - GLB in any form tried so far.
+!   - REFL followed by a glass token.
+!
+! ---------------------------------------------------------------------------
+! NAMING. The prescription calls the three physical prism faces S1, S2, S3.
+! CODE V surface numbers differ because the pupil is a surface and the prism's
+! first face is listed twice:
+!
+!   CODE V   physical face   event                        incidence
+!   ------   -------------   --------------------------   ---------
+!   S1       exit pupil      STOP, in air, global origin     --
+!   S2       face A (=S1)    refract  air -> glass          12.856 deg
+!   S3       face B (=S2)    REFLECT, coated mirror         21.374 deg
+!   S4       face A (=S1)    TIR  -- SAME PHYSICAL FACE     58.704 deg
+!   S5       face C (=S3)    refract  glass -> air          26.189 deg
+!   S6-S8    cemented doublet
+!   S9-S10   cover plate
+!   SI       microdisplay
+!
+! CRITICAL ANGLE, prism n_d 1.5300:
+!   40.813 deg at d (587.56), 40.908 deg at C (656.27), 40.601 deg at F (486.13).
+!   S3 at 21.374 deg is 19.4 deg BELOW critical -> it cannot be TIR, it is a
+!   coated mirror. S4 at 58.704 deg is +17.89 deg OVER critical -> true TIR.
+!   S2 and S4 are ONE physical face.
+!
+!   Worst case over the full 8 mm pupil x 3 wavelengths (verify_v2.py):
+!     field    S4 TIR incid   margin    S3 incid   S5 incid   status
+!      0 deg      49.900      +8.99      26.14      32.90     closes
+!    +11 deg      48.146      +7.24      27.43      37.12     closes
+!    -11 deg      51.179     +10.27      24.53      26.89     closes
+!    +22 deg      45.575      +4.67      28.20      38.58     closes
+!    -22 deg      52.311     +11.40      22.83      20.26     closes
+!
+! ---------------------------------------------------------------------------
+! ASSUMPTIONS
+!  1. TILT SIGN. Faces are prescribed as outward NORMALS. +X is out of the page,
+!     so a right-handed rotation about +X sends zhat -> (0,-sinA,cosA); a normal
+!     at +B from +Z toward +Y therefore needs ADE = -B.
+!         face A  normal +12.8562 deg  ->  ADE -12.8562
+!         face B  normal -16.8798 deg  ->  ADE +16.8798
+!         face C  normal +52.9653 deg  ->  ADE -52.9653
+!         relay axis     +95.4386 deg  ->  ADE -95.4386
+!  2. RADIUS SIGN. ADE puts local +Z along the outward normal, so the prescribed
+!     radii carry through unchanged. CHECK VIA THE GLOBAL CENTRES OF CURVATURE:
+!         face A -> (0, -19.2579,  -66.3804)
+!         face B -> (0, +14.1213,  -16.3513)
+!         face C -> (0, -267.2870, -204.5363)
+!     If a centre lands on the wrong side, flip that RDY sign.
+!  3. COUPLED FACE. S4 carries explicit values FIRST and pickups SECOND, so
+!     editing S2 drives S4 (one physical face) while the explicit values keep the
+!     geometry right even if a pickup line is refused.
+!  4. RELAY. Exactly TWO reflections (S3, S4). Because every prism surface is
+!     placed absolutely by DAR with THI 0, no reflected-space thickness sign
+!     arises anywhere in this file.
+!  5. FOCUS. PIM lands the display on paraxial focus. On run 2 it solved
+!     -0.2463 mm (negative) -- expected, since the relay was being fed by a
+!     scattered prism. Re-check the sign once the layout is correct.
+!  6. THE RELAY IS NOT PHYSICAL. The prescription asks for a Phi 26 mm doublet
+!     with R1 = +6.4 and R2 = -4.8; R2 caps the group at Phi 9.6 mm. Apertures
+!     here sit just under the radii. It will vignette hard. BENCHMARK_PROMPT_V2
+!     section 4 concedes the relay is a stand-in "not a manufacturable f/#".
+!     Redesign it before trusting ANY image-quality metric. It does not obstruct
+!     the chief ray, which is what this run is chasing.
+!  7. Apertures on SI are ignored by CODE V by design; kept to document the
+!     12.0 x 10.0 mm display. Decentred apertures are ignored for paraxial GO
+!     only -- they apply to real-ray traces.
+! ============================================================================
+
+LEN NEW
+TIT 'TIER A V2c - off-axis freeform prism eyepiece (spherical faces)'
+DIM M
+
+WL   656.27  587.56  486.13
+REF  2
+WTW  1  1  1
+
+XAN  0.0   0.0    0.0   0.0    0.0
+YAN  0.0  11.0  -11.0  22.0  -22.0
+
+EPD  8.0
+
+! ---- private catalog: model glasses at the three working wavelengths --------
+!      order matches PWL:  C (656.27)   d (587.56)   F (486.13)
+!      PRISM  n_d 1.5300  V_d 56.00
+!      CROWN  n_d 1.5168  V_d 64.17
+!      FLINT  n_d 1.6727  V_d 32.25
+PRV
+PWL 656.27 587.56 486.13
+'PRISM' 1.527066 1.530000 1.536530
+'CROWN' 1.514303 1.516800 1.522357
+'FLINT' 1.666234 1.672700 1.687093
+END
+
+! ---- object at infinity ----------------------------------------------------
+SO  0  1e18
+
+! ---- S1 : exit pupil / eyebox. STOP, in air. Frame origin for everything ----
+S   0  0.0
+STO S1
+CIR S1  4.0
+
+! ---- S2 : prism face A, refract air -> glass -------------------------------
+!      vertex (0, 0.000000, 18.000000)   normal (0, +0.222505, +0.974931)
+S  -86.5501  0.0  'PRISM'
+XDE S2   0.0
+YDE S2   0.0
+ZDE S2  18.0
+ADE S2 -12.8562
+DAR S2
+REX S2   5.0
+REY S2  19.0
+ADY S2   5.52
+
+! ---- S3 : prism face B, COATED MIRROR (21.374 deg is below critical) -------
+!      vertex (0, 0.760776, 27.679225)   normal (0, -0.290365, +0.956916)
+!      REFL takes no glass token -- the medium is unchanged by a reflection.
+S  -46.0130  0.0  REFL
+XDE S3   0.0
+YDE S3   0.760776
+ZDE S3  27.679225
+ADE S3  16.8798
+DAR S3
+REX S3   5.0
+REY S3  16.0
+ADY S3   0.26
+
+! ---- S4 : prism face A AGAIN, TIR (58.704 deg, +17.89 over critical) -------
+!      Same sphere, same vertex, same tilt, same aperture as S2.
+S  -86.5501  0.0  TIRO 'PRISM'
+XDE S4   0.0
+YDE S4   0.0
+ZDE S4  18.0
+ADE S4 -12.8562
+DAR S4
+REX S4   5.0
+REY S4  19.0
+ADY S4   5.52
+PIK RDY S4 S2
+PIK YDE S4 S2
+PIK ZDE S4 S2
+PIK ADE S4 S2
+
+! ---- S5 : prism face C, refract glass -> air -------------------------------
+!      vertex (0, 27.495340, 17.878452)  normal (0, +0.798271, +0.602299)
+S -369.2762  0.0
+XDE S5   0.0
+YDE S5  27.495340
+ZDE S5  17.878452
+ADE S5 -52.9653
+DAR S5
+REX S5   5.0
+REY S5  14.0
+ADY S5  -2.08
+
+! ---- S6-S8 : cemented doublet on the exit axis -----------------------------
+!      Exit axis (0, +0.995498, -0.094779) = 95.4386 deg from +Z -> ADE -95.4386.
+!      S6 vertex is 4.0 mm from the S5 vertex along that axis.
+!      NO DAR HERE: the tilt must PROPAGATE to S7..SI so the relay is a straight
+!      chain on the exit axis. S6's base frame is S1's frame (S5 returned).
+S    6.40   2.50  'CROWN'
+XDE S6   0.0
+YDE S6  31.477332
+ZDE S6  17.499336
+ADE S6 -95.4386
+CIR S6   6.0
+
+S   -4.80   1.00  'FLINT'
+CIR S7   4.5
+
+S  -20.00  10.023759
+CIR S8   4.5
+
+! ---- S9-S10 : cover plate --------------------------------------------------
+S    0   0.50  'CROWN'
+CIR S9  10.0
+
+S    0   0.0
+CIR S10 10.0
+
+! ---- SI : microdisplay, 12.0 x 10.0 mm active area -------------------------
+SI   0   0.0
+REX SI   6.0
+REY SI   5.0
+
+! ---- paraxial image solve: land the display on the paraxial focus ----------
+PIM
+
+GO

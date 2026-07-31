@@ -1,0 +1,67 @@
+env:
+  world_width: 300
+  world_height: 300
+  source_x: 0
+  detector_x: 300
+  quad_center_x: 150
+  source_y_min: 49
+  source_y_max: 51
+  detector_y_min: 47
+  detector_y_max: 53
+  slope_min: -0.01111
+  slope_max: 0.011111
+  sag_depth_frac_min: -0.25
+  sag_depth_frac_max: 0.25
+  detector_height: 5
+  quad_size: 40
+  ref_index: 1.5
+  ray_dx: 30
+  quad_y_min: 20
+  quad_y_max: 80
+  action_scale_y: 0.5
+  action_scale_sag: 0.01
+  max_steps: 1000
+  max_initial_power: 0.5  # Filter: reject initial conditions with power > 0.5
+  max_reset_attempts: 100  # Max resamples before giving up
+  boundary_penalty: 0.01
+  early_term_enabled: true
+  no_improve_patience: 120
+  clip_streak_patience: 60
+  improve_epsilon: 1.0e-4
+  good_enough_power_threshold: 0.90
+  good_power_patience: 20
+
+training:
+  algorithm: PPO
+  device: cuda
+  learning_rate: 0.0003
+  n_steps: 1000
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  total_timesteps: 500000
+  ent_coef: 0.05
+  use_persistent_runner: true
+
+callbacks:
+  eval_freq: 2048
+  checkpoint_freq: 10240
+  progress_freq: 512
+  n_eval_episodes: 20
+  eval_verbose: 0
+
+logging:
+  results_dir: results
+  logs_dir: results/logs
+  models_dir: results/models
+  tensorboard_dir: results/tensorboard
+  visualizations_dir: results/visualizations
+
+evaluation:
+  n_holdout_episodes: 100
+  seed_start: 10000
+  success_threshold: 0.60
+
+debug:
+  verbose_timing: true
+  timing_log_interval: 500000

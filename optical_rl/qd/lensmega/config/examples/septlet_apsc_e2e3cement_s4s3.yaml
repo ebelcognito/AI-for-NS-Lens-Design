@@ -1,0 +1,174 @@
+# ============================================================================
+# Septlet (7-element, E2+E3 cemented) — Discovery at F/3.5, EFL=50mm,
+#                                        APS-C-class image circle
+# ============================================================================
+# Variant of septlet_apsc_discovery.yaml where E2 and E3 are fused into a
+# Tessar-style cemented front doublet. The air gap between them is removed
+# and their adjacent curvatures are merged into a single cemented-interface
+# curvature (one fewer DOF in both gaps and curvatures). Materials remain
+# fully variable per element (the search picks (n, V) for E2 and E3
+# independently to optimize the cemented interface's chromatic correction).
+#
+# Topology after fusion:
+#   E1 + [E2||E3 cemented doublet] + STOP + E4 + E5 + E6 + E7
+#   = 6 groups, 5 air spaces, 14 refracting+stop surfaces.
+#
+# Why fuse E2+E3 specifically:
+#   - Removes the wide air gap (was [0.5, 12.0]) where the search liked to
+#     park at extremes, causing topology drift across generations.
+#   - Pre-stop position: ray bundles converge here, so the cemented interface
+#     has high leverage on spherical/coma at the marginal ray's tightest
+#     section.
+#   - Symmetric to a possible future E4+E5 cement (would yield a Double-
+#     Gauss-class topology); easy to bolt that on later.
+#
+# Theta layout: 13 curvatures + 13 gaps + 1 flange + 12 (n,V) = 39 (was 43).
+#
+# CEMENTED-DOUBLET MATERIALS LIMITATION: lensmega's element detector groups
+# consecutive non-air surfaces as a single "element" with one (n, V) pair.
+# So the cemented doublet here counts as ONE element in
+# `free_material_indices`, and both halves of the doublet share the same
+# glass — i.e. the cement interface does NOT contribute chromatic correction.
+# Topology reduction (fewer DOFs, narrower air-gap parking) is preserved;
+# the achromat benefit is not. To enable per-half glass, modify
+# `lens_template.py` element grouping + `full_dof.py:_build_n_full`.
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/septlet_50mm_f3_apsc_e2e3cement.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.486, 0.587, 0.656]
+  object_depth_mm: -20000.0
+  stop_surface_index: 5            # was 6 in non-cemented septlet
+  parameterization: full_dof
+
+  # 13 curvatures (all surfaces except the stop at index 5)
+  free_curvature_indices: [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+
+  enforce_fnum: true
+  f_number_target: 3.5
+  fnum_penalty_weight: 1.0
+
+  # 13 gaps (d_next of each refracting surface; the stop's d_next is also free)
+  free_gap_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  variable_flange: true
+  variable_materials: true
+  # 6 elements after E2+E3 fusion: [E1, doublet, E4, E5, E6, E7].
+  # The doublet (idx=1) shares one glass between its two halves — see
+  # the "CEMENTED-DOUBLET MATERIALS LIMITATION" note in the header.
+  free_material_indices: [0, 1, 2, 3, 4, 5]
+
+  theta_bounds:
+    # --- 13 curvatures ---
+    - [-0.08, 0.08]      # c0   E1 front
+    - [-0.08, 0.08]      # c1   E1 back
+    - [-0.08, 0.08]      # c2   E2 front (front of cemented doublet)
+    - [-0.08, 0.08]      # c3   cemented interface (back of E2 = front of E3)
+    - [-0.08, 0.08]      # c4   E3 back  (back of cemented doublet)
+    - [-0.08, 0.08]      # c6   E4 front (post-stop)
+    - [-0.08, 0.08]      # c7   E4 back
+    - [-0.08, 0.08]      # c8   E5 front
+    - [-0.08, 0.08]      # c9   E5 back
+    - [-0.08, 0.08]      # c10  E6 front
+    - [-0.08, 0.08]      # c11  E6 back
+    - [-0.08, 0.08]      # c12  E7 front
+    - [-0.08, 0.08]      # c13  E7 back
+    # --- 13 gaps ---
+    - [1.5, 5.0]         # g0   E1 thickness (crown)
+    - [0.5, 12.0]        # g1   Air gap E1 → doublet front
+    - [1.5, 5.0]         # g2   E2 portion of doublet thickness (crown side)
+    - [1.0, 4.0]         # g3   E3 portion of doublet thickness (flint side)
+    - [0.5, 8.0]         # g4   Air gap doublet back → Stop
+    - [0.5, 8.0]         # g5   Air gap Stop → E4
+    - [1.0, 4.0]         # g6   E4 thickness (flint)
+    - [0.5, 12.0]        # g7   Air gap E4 → E5
+    - [1.5, 5.0]         # g8   E5 thickness (crown)
+    - [0.5, 12.0]        # g9   Air gap E5 → E6
+    - [1.5, 5.0]         # g10  E6 thickness (crown)
+    - [0.5, 12.0]        # g11  Air gap E6 → E7
+    - [1.5, 5.0]         # g12  E7 thickness (crown)
+    # --- flange ---
+    - [10.0, 50.0]       # flange
+    # --- materials: (n, V) per element (6 elements after E2+E3 fusion) ---
+    - [1.45, 1.85]       # n_0  E1
+    - [25, 75]           # V_0
+    - [1.45, 1.85]       # n_1  doublet (one glass for both E2 and E3 halves)
+    - [25, 75]           # V_1
+    - [1.45, 1.85]       # n_2  E4
+    - [25, 75]           # V_2
+    - [1.45, 1.85]       # n_3  E5
+    - [25, 75]           # V_3
+    - [1.45, 1.85]       # n_4  E6
+    - [25, 75]           # V_4
+    - [1.45, 1.85]       # n_5  E7
+    - [25, 75]           # V_5
+
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 10.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 1
+
+descriptor:
+  kind: seidel
+  # (S4, S3) — Petzval × Astigmatism. S4 (Petzval field curvature) is the
+  # textbook dominant blocker for wide-FoV photographic lenses. Pairing it
+  # with astigmatism gives axes that should separate flat-field vs
+  # curved-field topologies. Bounds re-derived for these terms below.
+  params:
+    terms: ["S4", "S3"]
+
+algorithm:
+  population_size: 24
+  initial_sigma: 0.5
+  cma_eta: 0.10
+  cma_seed: 42
+  seed_count: 2000
+  calibration_count: 2000
+  iterations: 100000
+  new_cell_bonus: 20.0
+  scale_bonus_by_fitness: true
+  bonus_fitness_threshold: -1.0
+  bonus_fitness_scale: 2.0
+  log_every: 50
+  restart_patience: 3
+  fitness_patience: 50
+  fitness_improve_eps: 1.0e-6
+
+archive:
+  bins: [256, 256]
+  # Probe-derived for (S4, S3) at this template (245/2000 valid samples,
+  # 2-98 percentile + 5% pad):
+  #   S4 (Petzval):     [-0.0037, +0.0081]
+  #   S3 (Astigmatism): [-0.0051, +0.0173]
+  # Pair correlation: |r(S4,S3)| = 0.16  (vs 0.70 for the prior S2/S3 pair —
+  # the new pair gives a real 2D archive instead of a ~1.5D one).
+  # Bounds rounded out for headroom; asymmetric to match the actual S+
+  # skew, especially on S3.
+  # Order matches descriptor.params.terms = ["S4", "S3"].
+  bounds: [[-0.005, 0.010], [-0.007, 0.025]]
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: septlet_apsc_e2e3cement_s4s3
+  checkpoint_every: 200
+  device: auto
+  elite_fitness_threshold: -1.2
+  refine_efl_penalty_weight: 20.0
+  refine_invalid_penalty_weight: 10.0
+  refine_intersect_penalty_weight: 2.0
+  refine_fnum_penalty_weight: 2.0
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 0.00008
+  refine_field_weights: [1.0, 2.0, 4.0]
+  refine_stability_samples: 20
+  refine_stability_perturbation: 0.005

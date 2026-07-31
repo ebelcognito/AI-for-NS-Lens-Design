@@ -1,0 +1,41 @@
+! FOLDED-AXIS CODE V macro : fold_cell_4_11
+! dom_signature : T@A -> TIR@D -> TIR@B -> TIR@A -> TIR@T -> T@B
+! Real thicknesses thread the chief ray; folds = TIRO (stay in glass).
+! ADE handedness/fold sign: VALIDATE on a 1-bounce design first (see header of exporter).
+LEN NEW
+DIM M
+WL 587.56
+REF 1
+EPD 8.000000
+YAN 23.884815
+! constant-index model glass
+PRV
+PWL 587.56
+'FOLDN' 1.500000
+END
+SO 0 1e18
+YDE S1 9.459225
+STO S1
+THI S1 37.207328
+! S2: refract @A  incid=10.88  deflect=3.65
+S 156.054833 11.844593 'FOLDN'
+ADE S2 10.876174
+! S3: tir @D  incid=62.47  deflect=-55.07
+S 0 -28.486823 TIRO 'FOLDN'
+ADE S3 27.534529
+! S4: tir @B  incid=48.11  deflect=-83.79
+S 197.543133 39.541296 TIRO 'FOLDN'
+ADE S4 41.893035
+! S5: tir @A  incid=52.13  deflect=75.74
+S 156.054833 -17.178268 TIRO 'FOLDN'
+ADE S5 -37.868408
+! S6: tir @T  incid=54.42  deflect=71.17
+S 0 13.129710 TIRO 'FOLDN'
+ADE S6 -35.583783
+! S7: refract @B  incid=26.78  deflect=15.74
+S 197.543133 63.922471
+ADE S7 -26.782992
+! detector plane; CIR sets the sensor half-size
+SI 0 0
+CIR SI 20.0000
+GO

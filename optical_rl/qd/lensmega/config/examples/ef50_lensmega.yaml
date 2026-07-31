@@ -1,0 +1,67 @@
+problem:
+  kind: lens
+  lens_path: DeepLens/datasets/lenses/camera/ef50mm_f1.8.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.656, 0.587, 0.486]
+  object_depth_mm: -20000.0
+  stop_surface_index: 6
+  free_curvature_indices: [0, 1, 2, 3, 4, 5, 7, 8, 9, 10]
+  derived_curvature_index: 11
+  focal_length_target_mm: 50.52
+  theta_bounds:
+ # Element 1 (positive meniscus, front group power)
+      - [-0.1, 0.065]    # c0   ref=+0.029, strong positive
+      - [-0.035, 0.035]   # c1   ref=+0.004, weak/near-flat
+
+      # Element 2 (positive element, front group)
+      - [-0.08, 0.080]    # c2   ref=+0.046, strong positive
+      - [-0.060, 0.060]   # c3   ref=+0.025, moderate positive
+
+      # Element 3 (negative element, front group - flint)
+      - [-0.045, 0.045]   # c4   ref=+0.013, weak positive
+      - [-0.090, 0.090]    # c5   ref=+0.065, strong positive
+
+      # Cemented doublet (rear group - this is the correction group)
+      - [-0.090, 0.090]  # c7   ref=-0.063, strong negative
+      - [-0.045, 0.045]   # c8   ref=+0.007, weak (cemented interface)
+      - [-0.080, 0.080]  # c9   ref=-0.047, strong negative
+
+      # Element 5 (rear positive element)
+      - [-0.040, 0.040]   # c10  ref=+0.006, weak positive
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.15
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 1.0
+  strict_entrance_pupil: true
+  descriptor_field_index: 0
+
+descriptor:
+  kind: zernike
+  params:
+    noll_indices: [4, 11]
+    num_rays: 512
+
+algorithm:
+  population_size: 16
+  initial_sigma: 0.75
+  cma_eta: 0.2
+  cma_seed: 0
+  seed_count: 512
+  calibration_count: 512
+  iterations: 8000
+  new_cell_bonus: 1.0e6
+  log_every: 50
+
+archive:
+  bins: [512, 512]
+  bounds: null
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: ef50_3_65_ap
+  checkpoint_every: 50
+  device: auto

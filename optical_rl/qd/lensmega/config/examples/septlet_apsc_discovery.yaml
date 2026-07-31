@@ -1,0 +1,166 @@
+# ============================================================================
+# Septlet (7-element) — Discovery at F/3, EFL=50mm, APS-C-class image circle
+# ============================================================================
+# Same topology and DOF as septlet_F3_discovery.yaml, but the underlying
+# template's image circle is bumped from r_sensor=6.25mm (~5° HFoV used for
+# fitness) to r_sensor=17.0mm (~13.5° HFoV) — i.e. the lens must now cover
+# a 34mm-diagonal sensor, which inscribes APS-C (28.4mm diag) with margin.
+#
+# Why APS-C: the prior small-r_sensor runs let the lens cheat on field
+# correction — Petzval / coma / astigmatism barely engage when image
+# heights are <5mm. At image heights of ~12mm (sensor side/2) the search
+# is forced to find designs that genuinely correct off-axis aberrations,
+# which is where the interesting double-Gauss-like / retrofocus topologies
+# live for photographic lenses.
+#
+# Knobs identical to septlet_F3_discovery.yaml unless commented otherwise.
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/septlet_50mm_f3_apsc.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.486, 0.587, 0.656]
+  object_depth_mm: -20000.0
+  stop_surface_index: 6
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+
+  # --- F-number soft constraint -----------------------------------------------
+  enforce_fnum: true
+  f_number_target: 3.5
+  fnum_penalty_weight: 1.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+  variable_flange: true
+  variable_materials: true
+  free_material_indices: [0, 1, 2, 3, 4, 5, 6]   # all 7 glass elements
+
+  theta_bounds:
+    # --- 14 curvatures: bounds matched to sixlet (±0.08) since EFL=50 ---
+    - [-0.08, 0.08]      # c0   E1 front (crown)
+    - [-0.08, 0.08]      # c1   E1 back
+    - [-0.08, 0.08]      # c2   E2 front (crown)
+    - [-0.08, 0.08]      # c3   E2 back
+    - [-0.08, 0.08]      # c4   E3 front (flint)
+    - [-0.08, 0.08]      # c5   E3 back
+    - [-0.08, 0.08]      # c7   E4 front (flint)   [post-stop]
+    - [-0.08, 0.08]      # c8   E4 back
+    - [-0.08, 0.08]      # c9   E5 front (crown)
+    - [-0.08, 0.08]      # c10  E5 back
+    - [-0.08, 0.08]      # c11  E6 front (crown)
+    - [-0.08, 0.08]      # c12  E6 back
+    - [-0.08, 0.08]      # c13  E7 front (crown)   [extra back element]
+    - [-0.08, 0.08]      # c14  E7 back
+    # --- 14 gaps: physical manufacturing constraints ---
+    - [1.5, 5.0]         # g0   E1 thickness (crown glass)
+    - [0.5, 12.0]        # g1   Air gap E1→E2
+    - [1.5, 5.0]         # g2   E2 thickness (crown glass)
+    - [0.5, 12.0]        # g3   Air gap E2→E3
+    - [1.0, 4.0]         # g4   E3 thickness (flint glass)
+    - [0.5, 8.0]         # g5   Air gap E3→Stop
+    - [0.5, 8.0]         # g6   Air gap Stop→E4
+    - [1.0, 4.0]         # g7   E4 thickness (flint glass)
+    - [0.5, 12.0]        # g8   Air gap E4→E5
+    - [1.5, 5.0]         # g9   E5 thickness (crown glass)
+    - [0.5, 12.0]        # g10  Air gap E5→E6
+    - [1.5, 5.0]         # g11  E6 thickness (crown glass)
+    - [0.5, 12.0]        # g12  Air gap E6→E7
+    - [1.5, 5.0]         # g13  E7 thickness (crown glass)
+    # --- flange (last surface to sensor) ---
+    # Wider-FoV designs often want shorter BFL than narrow-FoV ones (rear
+    # group pulls the image plane in), so allow it to drop to 10mm.
+    - [10.0, 50.0]       # flange
+    # --- materials: (n, V) per element (7 elements) ---
+    - [1.45, 1.85]       # n_0  E1 refractive index
+    - [25, 75]           # V_0  E1 Abbe number
+    - [1.45, 1.85]       # n_1  E2
+    - [25, 75]           # V_1
+    - [1.45, 1.85]       # n_2  E3
+    - [25, 75]           # V_2
+    - [1.45, 1.85]       # n_3  E4
+    - [25, 75]           # V_3
+    - [1.45, 1.85]       # n_4  E5
+    - [25, 75]           # V_4
+    - [1.45, 1.85]       # n_5  E6
+    - [25, 75]           # V_5
+    - [1.45, 1.85]       # n_6  E7
+    - [25, 75]           # V_6
+
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 1
+
+descriptor:
+  kind: seidel
+  params:
+    terms: ["S2", "S3"]
+
+algorithm:
+  population_size: 24
+  initial_sigma: 0.5
+  cma_eta: 0.10
+  cma_seed: 42
+  seed_count: 2000
+  calibration_count: 2000
+  iterations: 100000
+  # OPTION 1: dropped from 1e6 to 20 so the bonus is on the same order of
+  # magnitude as fitness (~ -5 to -10 observed). At 1e6 every "any new cell"
+  # outranked every "improve existing cell", so CMA never invested in
+  # exploitation and the elite frontier froze.
+  new_cell_bonus: 20.0
+  # OPTION 2: scale the bonus by sigmoid((fit - thr) / scale) so a new cell
+  # at garbage fitness gets near-zero bonus. With thr=-1 and scale=2:
+  #   fit=-1 → 50% of bonus (10);  fit=-5 → 12% (2.4);  fit=-10 → 1% (0.2)
+  # Combined with new_cell_bonus=20: a *good* new cell still beats any
+  # existing-cell improvement, but a bad new cell loses to one.
+  scale_bonus_by_fitness: true
+  bonus_fitness_threshold: -1.0
+  bonus_fitness_scale: 2.0
+  log_every: 50
+  restart_patience: 3
+  # Break sigma-runaway equilibria: restart if best_fitness has not improved
+  # for `fitness_patience` consecutive generations, even when the archive keeps
+  # absorbing corner-saturated novelty. The first APS-C run hit this exact
+  # mode — best frozen at -4.628 from gen 500 onward while sigma climbed to
+  # 2e9 by gen 700. 0 disables.
+  fitness_patience: 50
+  fitness_improve_eps: 1.0e-6
+
+archive:
+  bins: [256, 256]
+  # Hand-set rather than auto-calibrated: at the APS-C FoV, only ~3% of
+  # random 43-D samples pass the seeder's validity filter (invalid_fraction
+  # < 0.2 + non-rejected pupil/bfl), so calibrate with n=2000 fails the
+  # 250-valid threshold. A 67-sample probe at this FoV gave 2-98 percentile
+  # bounds of S2 ≈ [-0.0026, 0.0069] and S3 ≈ [-0.0060, 0.0094]; rounded up
+  # to ±0.008 / ±0.012 for headroom and to keep the grid symmetric. ~8-12x
+  # wider per axis than the small-r_sensor sixlet's ±0.001.
+  bounds: [[-0.008, 0.008], [-0.012, 0.012]]
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: septlet_apsc_discovery
+  checkpoint_every: 200
+  device: auto
+  elite_fitness_threshold: -1.2
+  refine_efl_penalty_weight: 20.0
+  refine_invalid_penalty_weight: 10.0
+  refine_intersect_penalty_weight: 2.0
+  refine_fnum_penalty_weight: 2.0
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 0.00008
+  refine_field_weights: [1.0, 2.0, 4.0]
+  refine_stability_samples: 20
+  refine_stability_perturbation: 0.005

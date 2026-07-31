@@ -1,0 +1,72 @@
+qd:
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/cooke_smaller_ap_1mm.json
+  results_dir: results/models
+  run_name: triplet_cooke_zernike
+
+  object_depth_mm: -20000.0
+  wavelength_um: 0.587
+
+  # Wavelengths for polychromatic RMS spot fitness (Fraunhofer C, d, F lines).
+  fitness_wavelengths_um: [0.656, 0.587, 0.486]
+
+  # Index of the aperture-stop surface in the JSON surface list (0-based).
+  stop_surface_index: 4
+
+  # Fix EFL to 50 mm.  c6 (rear element 3) is derived from the paraxial solve,
+  # so theta is 5-D: [c0, c1, c2, c3, c5].  d_sensor follows automatically.
+  # Set to null to revert to 6-D free mode.
+  focal_length_target_mm: 60.0
+
+  # 5D theta: [c0, c1, c2, c3, c5] — c6 derived; surface 4 is the aperture stop.
+  theta_bounds:
+    - [-0.06, 0.06]   # c0  front element 1
+    - [-0.06, 0.06]   # c1  rear  element 1
+    - [-0.06, 0.06]   # c2  front element 2
+    - [-0.06, 0.06]   # c3  rear  element 2
+    - [-0.06, 0.06]   # c5  front element 3
+    # c6 is derived — do NOT add a 6th entry here
+
+  # Two 1-based Noll Zernike indices used as archive behavioral descriptors.
+  # (7, 4)  vertical coma + defocus         — good for off-axis field
+  # (7, 11) vertical coma + primary spherical
+  # (4, 11) defocus + primary spherical
+  descriptor_zernike_indices: [4, 11]
+
+  archive_bins: [512, 512]
+  archive_bounds: null    # null → auto-calibrated from random design sweep
+
+  invalid_tol: 0.05
+  invalid_penalty_weight: 5.0
+
+  # L2 Zernike distance below which two converged designs count as the same basin.
+  dist_threshold: 0.003
+
+  cma_eta: 10
+  initial_sigma: 0.75
+  population_size: 16
+  seed: 0
+
+  seed_count: 10000
+  calibration_count: 10000
+  iterations: 10000
+
+  num_rays: 256
+  refine_num_rays: 256   # rays used during L-BFGS-B refinement (matches archive quality)
+
+  # Fitness evaluation stage.
+  # "stage1" = on-axis RMS spot only (faster, good for initial exploration).
+  # "stage2" = mean RMS spot over 3 meridional field points (0, 0.5, 1.0 × HFOV).
+  # HFOV is computed per-individual from paraxial EFL and sensor size.
+  stage: stage2
+
+  # Which hfov3 field position to use for Zernike OPD measurement:
+  #   0 = on-axis, 1 = mid-field (0.5 × HFOV), 2 = full-field (HFOV)
+  zernike_field_index: 2
+
+  device: cuda
+  log_every: 5
+
+  # Rendering defaults (used by render_triplet_cooke_zernike.py when --config is provided)
+  # Fitness is negative RMS spot (higher/less-negative is better).
+  # Example: -1.0 keeps designs with RMS spot <= 1.0 mm and filters penalized failures (e.g. -500000).
+  render_min_fitness: -1.0

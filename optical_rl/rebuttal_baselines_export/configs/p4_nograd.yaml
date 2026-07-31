@@ -1,0 +1,190 @@
+problem:
+  kind: lens
+  lens_path: DeepLens/datasets/lenses/sixlet_50mm_f4_apsc_v2.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um:
+  - 0.486
+  - 0.587
+  - 0.656
+  object_depth_mm: -20000.0
+  stop_surface_index: 6
+  parameterization: full_dof
+  free_curvature_indices:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+  enforce_fnum: false
+  f_number_target: 4.0
+  fnum_penalty_weight: 1.0
+  free_gap_indices:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  variable_flange: true
+  variable_materials: true
+  free_material_indices:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  theta_bounds:
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - -0.05
+    - 0.05
+  - - 1.5
+    - 5.0
+  - - 0.5
+    - 12.0
+  - - 1.5
+    - 5.0
+  - - 0.5
+    - 12.0
+  - - 1.0
+    - 4.0
+  - - 0.5
+    - 8.0
+  - - 0.5
+    - 8.0
+  - - 1.0
+    - 4.0
+  - - 0.5
+    - 12.0
+  - - 1.5
+    - 5.0
+  - - 0.5
+    - 12.0
+  - - 1.5
+    - 5.0
+  - - 10.0
+    - 50.0
+  - - 1.45
+    - 1.85
+  - - 25
+    - 75
+  - - 1.45
+    - 1.85
+  - - 25
+    - 75
+  - - 1.45
+    - 1.85
+  - - 25
+    - 75
+  - - 1.45
+    - 1.85
+  - - 25
+    - 75
+  - - 1.45
+    - 1.85
+  - - 25
+    - 75
+  - - 1.45
+    - 1.85
+  - - 25
+    - 75
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 8.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 1
+descriptor:
+  kind: seidel
+  params:
+    terms:
+    - S2
+    - S3
+algorithm:
+  population_size: 24
+  initial_sigma: 0.5
+  cma_eta: 0.1
+  cma_seed: 42
+  seed_count: 5000
+  calibration_count: 2000
+  iterations: 100000
+  new_cell_bonus: 20.0
+  scale_bonus_by_fitness: true
+  bonus_fitness_threshold: -1.0
+  bonus_fitness_scale: 2.0
+  log_every: 50
+  restart_patience: 3
+  fitness_patience: 50
+  fitness_improve_eps: 1.0e-06
+  ablate_gradients: true
+archive:
+  bins:
+  - 512
+  - 512
+  bounds:
+  - - -0.008
+    - 0.008
+  - - -0.012
+    - 0.012
+  bound_calibration_pad: 0.05
+io:
+  results_dir: results/lensmega
+  run_name: sixlet_rebuttal_nograd
+  checkpoint_every: 200
+  device: auto
+  elite_fitness_threshold: -0.1
+  refine_efl_penalty_weight: 20.0
+  refine_invalid_penalty_weight: 10.0
+  refine_intersect_penalty_weight: 2.0
+  refine_fnum_penalty_weight: 2.0
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 8.0e-05
+  refine_field_weights:
+  - 1.0
+  - 2.0
+  - 4.0
+  refine_stability_samples: 20
+  refine_stability_perturbation: 0.005
+  log_gradients: false
+  parallel_workers: 52

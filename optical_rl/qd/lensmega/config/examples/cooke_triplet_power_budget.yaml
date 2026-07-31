@@ -1,0 +1,70 @@
+# ============================================================================
+# Cooke Triplet — Power-Budget Parameterization
+# ============================================================================
+# CMA-MEGA searches over power fractions instead of raw curvatures.
+# Total system power is fixed at 1/50mm = 0.02.  Each theta_i controls
+# what fraction of that power surface i carries.  Curvatures are derived:
+#   c_i = (fraction_i * P_total) / (n_after_i - n_before_i)
+#
+# All 6 curvature surfaces are free.  No derived surface.  A soft EFL
+# penalty handles the thick-lens residual.
+#
+# Theta bounds are in power-fraction space (wider than curvature space).
+# Negative values represent negative elements.
+
+problem:
+  kind: lens
+  lens_path: DeepLens/datasets/lenses/cooke.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.587]
+  object_depth_mm: -20000.0
+  stop_surface_index: 4
+  free_curvature_indices: [0, 1, 2, 3, 5, 6]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  parameterization: power_budget
+  efl_penalty_weight: 5.0
+  theta_bounds:
+    - [-2.0, 2.0]    # power fraction for surface 0
+    - [-2.0, 2.0]    # power fraction for surface 1
+    - [-2.0, 2.0]    # power fraction for surface 2
+    - [-2.0, 2.0]    # power fraction for surface 3
+    - [-2.0, 2.0]    # power fraction for surface 5
+    - [-2.0, 2.0]    # power fraction for surface 6
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 1.0
+  strict_entrance_pupil: true
+  descriptor_field_index: 0
+
+descriptor:
+  kind: zernike
+  params:
+    noll_indices: [7, 11]
+    num_rays: 256
+
+algorithm:
+  population_size: 16
+  initial_sigma: 0.75
+  cma_eta: 0.05
+  cma_seed: 0
+  seed_count: 512
+  calibration_count: 1024
+  iterations: 100000
+  new_cell_bonus: 1.0e6
+  log_every: 50
+
+archive:
+  bins: [512, 512]
+  bounds: null
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: cooke_triplet_power_budget
+  checkpoint_every: 100
+  device: auto

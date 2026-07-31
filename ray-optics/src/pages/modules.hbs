@@ -1,0 +1,164 @@
+<!--
+  Copyright 2024 The Ray Optics Simulation authors and contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="{{lang}}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{thirdpartyUrl}}/bootstrap/bootstrap.min.css">
+  <link rel="icon" href="{{imgUrl}}/icon.png" type="image/png">
+  <style>
+    .module-image {
+      width: 150px;
+      height: 150px !important;
+      float: left;
+      margin-right: 9px;
+      margin-bottom: 9px;
+    }
+
+    .right-caption>img {
+      float: left;
+      margin-right: 9px;
+    }
+
+    .caption {
+      padding: 0px !important;
+    }
+
+    .module-title {
+      font-size: 16pt;
+      margin-top: 0px;
+      margin-bottom: 0px;
+    }
+
+    .import-btn {
+      float: right;
+      margin-right: 8px;
+    }
+
+    .module-contributor {
+      font-size: 8pt;
+      color: #888;
+      margin-top: 0px;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .collapse {
+      padding-top: 8px;
+    }
+
+    body {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      font-size: 12pt;
+    }
+
+    ::-webkit-scrollbar {
+      background: none;
+      width: 12px;
+      height: 12px;
+    }
+    ::-webkit-scrollbar-thumb {
+      border: solid 0 rgba(0, 0, 0, 0);
+      border-right-width: 4px;
+      border-left-width: 4px;
+      -webkit-border-radius: 6px 2px;
+      -webkit-box-shadow:
+      inset 0 0 0 0px rgba(112, 112, 112, 0.35),
+      inset 0 0 0 4px rgba(112, 112, 112, 0.35);
+    }
+    ::-webkit-scrollbar-track-piece {
+      margin: 4px 0;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        border-right-width: 3px;
+        border-left-width: 3px;
+      -webkit-box-shadow:
+        inset 0 0 0 0px rgba(128,128,128,0.9),
+        inset 0 0 0 4px rgba(128,128,128,0.9);
+    }
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <ul style="padding-left: 1.5rem;">
+      <li>{{t "modules:modulesPage:description:makeNewTools"}}</li>
+      <li>{{t "modules:modulesPage:description:appearAsTools"}}</li>
+      <li>{{t "modules:modulesPage:description:embeddedInScene"}}</li>
+    </ul>
+    {{#each content}}
+    <div class="row right-caption">
+      <picture>
+        <source srcset="{{this.thumbnailUrl}}.avif" type="image/avif">
+        <img src="{{this.thumbnailUrl}}.jpg" alt="{{t this.titleKey}}" class="img-rounded module-image" loading="lazy">
+      </picture>
+      <div class="caption">
+        <p class="module-title">{{t this.titleKey}} (<code>{{this.id}}</code>)<button class="btn btn-primary import-btn" onclick="window.parent.postMessage({rayOpticsModuleName: '{{this.id}}'},'*');this.innerText='{{t "modules:modulesPage:imported"}}';this.classList.remove('btn-primary');this.classList.add('btn-success');">{{t "modules:modulesPage:import"}}</button></p>
+        <p class="module-contributor">{{this.contributors}}</p>
+        <span id="module-desc">
+          {{t this.descriptionKey blank=true}}
+        </span>
+        <button class="collapse-btn btn-link" data-toggle="collapse" data-target="#details-collapse-{{this.id}}">
+          {{t "modules:modulesPage:specification:title"}}
+          <span class="caret"></span>
+        </button>
+      </div>
+    </div>
+    <div id="details-collapse-{{this.id}}" class="collapse">
+      {{#if this.hasControlPoints}}
+      {{t "modules:modulesPage:specification:controlPointSequence"}}
+      <ol>
+        {{#each this.controlPointSequenceKeys}}
+        <li>{{t this blank=true}}</li>
+        {{/each}}
+      </ol>
+      {{/if}}
+      {{#if this.hasParameters}}
+      {{t "modules:modulesPage:specification:parameters"}}
+      <ul>
+        {{#each this.parametersKeys}}
+        <li><code>{{@key}}</code>: {{t this blank=true}}</li>
+        {{/each}}
+      </ul>
+      {{/if}}
+    </div>
+    {{/each}}
+
+    <h2>{{t "modules:modulesPage:customization:title"}}</h2>
+    <p>{{t "modules:modulesPage:customization:description" blank=true}}</p>
+
+    <h2>{{t "modules:modulesPage:contribution:title"}}</h2>
+    <p>{{t "modules:modulesPage:contribution:description" blank=true}}</p>
+  </div>
+
+  <script src="{{thirdpartyUrl}}/jquery.min.js"></script>
+  <script src="{{thirdpartyUrl}}/bootstrap/bootstrap.min.js"></script>
+  <script id="MathJax-script" async src="{{thirdpartyUrl}}/mathjax/tex-mml-chtml.js"></script>
+</body>
+
+</html>

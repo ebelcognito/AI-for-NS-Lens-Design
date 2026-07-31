@@ -1,0 +1,49 @@
+env:
+  world_width: 300
+  world_height: 100
+  source_x: 0
+  detector_x: 300
+  quad_center_x: 150
+  source_y_min: 40
+  source_y_max: 60
+  detector_y_min: 60
+  detector_y_max: 70
+  slope_min: -0.0333333333
+  slope_max: 0.0333333333
+  detector_height: 5
+  quad_size: 40
+  ref_index: 1.5
+  ray_dx: 30
+  quad_y_min: 20
+  quad_y_max: 80
+  action_scale: 5
+  max_steps: 64
+
+training:
+  algorithm: PPO
+  device: cuda
+  learning_rate: 0.0003
+  n_steps: 1024
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  total_timesteps: 20000
+  use_persistent_runner: true
+
+callbacks:
+  eval_freq: 4096
+  checkpoint_freq: 20480
+  progress_freq: 1024
+  n_eval_episodes: 5
+  eval_verbose: 1
+
+logging:
+  results_dir: results
+  logs_dir: results/logs
+  models_dir: results/models
+  tensorboard_dir: results/tensorboard
+  visualizations_dir: results/visualizations
+
+debug:
+  verbose_timing: true
+  timing_log_interval: 500

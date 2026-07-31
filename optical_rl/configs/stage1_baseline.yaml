@@ -1,0 +1,35 @@
+env:
+  source_x: 50
+  source_y: 150
+  detector_x: 350
+  detector_y: 150
+  detector_height: 20
+  quad_size: 50
+  quad_x_min: 100
+  quad_x_max: 300
+  action_scale: 10
+  max_steps: 20
+  ref_index: 1.5
+
+training:
+  algorithm: PPO
+  device: cuda
+  learning_rate: 0.0003
+  n_steps: 1024
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  total_timesteps: 20000
+
+callbacks:
+  eval_freq: 4096
+  checkpoint_freq: 20480
+  n_eval_episodes: 5
+  eval_verbose: 1
+
+logging:
+  results_dir: results
+  logs_dir: results/logs
+  models_dir: results/models
+  tensorboard_dir: results/tensorboard
+  visualizations_dir: results/visualizations

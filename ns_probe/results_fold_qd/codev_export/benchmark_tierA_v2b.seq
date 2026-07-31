@@ -1,0 +1,231 @@
+! ============================================================================
+! TIER A V2b -- off-axis, plane-symmetric freeform-prism eyepiece
+!
+! Revision of benchmark_tierA_v2.seq after the first live CODE V 2026 run.
+! Geometry is UNCHANGED (verified by verify_v2.py / check_seq_v2.py); only the
+! three syntax/physics defects the Error Log exposed are fixed:
+!
+!   FIX 1 (critical) -- MODEL GLASS ON THE S LINE.
+!     "S -46.0130 0.0 1.53 56.0 REFL" produced
+!         Warning: Extra data '56.0 REFL' ignored
+!     The S command takes ONE glass token, not an n_d/V_d pair. CODE V read 1.53
+!     as a zero-dispersion fictitious glass (LDM showed "100000.530000") and
+!     THREW AWAY the rest of the line -- INCLUDING REFL and REFLTIRO. The result
+!     had NO reflective surfaces at all (LDM Refract Mode read "Refract" on both
+!     surface 3 and surface 4), so the fold could not possibly close, and all
+!     three wavelengths traced identically.
+!     Now: glasses are declared in a PRIVATE CATALOG at the three working
+!     wavelengths (this syntax is confirmed working in this project), which also
+!     restores real dispersion. Indices follow the same model verify_v2.py uses:
+!         dn = (n_d - 1)/V_d ;  n_C = n_d - 0.31*dn ;  n_F = n_C + dn
+!
+!   FIX 2 -- GLOBAL REFERENCE SURFACE.
+!     "GLB S2 S1" produced  Error: Too many surface qualifiers
+!     -- it parsed BOTH S2 and S1 as surface qualifiers. Every GLB therefore
+!     failed, and the LDM fell back to "Basic Decenter": the YDE/ZDE/ADE below
+!     were applied as LOCAL decenters chained off each previous tilted surface,
+!     while they are authored as GLOBAL coordinates. That is what scattered the
+!     layout. Now written as "GLB Sn 1" (reference surface as a plain integer).
+!     >> IF THIS STILL ERRORS: delete the six GLB lines and instead set
+!        "Global Reference Surface = 1" in Surface Properties for surfaces
+!        2,3,4,5,6. The YDE/ZDE/ADE values below are already the correct GLOBAL
+!        coordinates and need no change.
+!
+!   FIX 3 -- IMPOSSIBLE DOUBLET APERTURE.
+!     "Aperture value is larger than radius on surface 6/7. Reduced."
+!     The prescription asks for a Phi 26 mm doublet whose first radius is 6.4 mm
+!     and second is -4.8 mm. A 13 mm semi-aperture on a 6.4 mm sphere does not
+!     exist; R2 caps the group at Phi 9.6 mm. This is a DEFECT IN THE V2
+!     PRESCRIPTION (its own section 4 concedes the relay is a stand-in, "not a
+!     manufacturable f/#"), not a transcription error. Apertures are set just
+!     under the radii here so the warning clears; the relay will vignette badly
+!     and needs redesigning before any image-quality metric means anything.
+!     It does NOT obstruct the chief ray, which is what we are chasing now.
+!
+! ---------------------------------------------------------------------------
+! NAMING. The prescription calls the three physical prism faces S1, S2, S3.
+! CODE V surface numbers differ because the pupil is a surface and the prism's
+! first face is listed twice:
+!
+!   CODE V   physical face   event                        incidence
+!   ------   -------------   --------------------------   ---------
+!   S1       exit pupil      STOP, in air, global origin     --
+!   S2       face A (=S1)    refract  air -> glass          12.856 deg
+!   S3       face B (=S2)    REFLECT, coated mirror         21.374 deg
+!   S4       face A (=S1)    TIR  -- SAME PHYSICAL FACE     58.704 deg
+!   S5       face C (=S3)    refract  glass -> air          26.189 deg
+!   S6-S8    cemented doublet
+!   S9-S10   cover plate
+!   SI       microdisplay
+!
+! CRITICAL ANGLE, prism n_d 1.5300:
+!   40.813 deg at d (587.56), 40.908 deg at C (656.27), 40.601 deg at F (486.13).
+!   The C line is the worst case for TIR.
+!   S3 sits at 21.374 deg -- 19.4 deg BELOW critical -- so it physically cannot
+!   be TIR; it is a coated mirror (REFL). S4 sits at 58.704 deg, +17.89 deg OVER
+!   critical, so it is true TIR (TIRO). S2 and S4 are ONE physical face.
+!
+!   Worst case over the full 8 mm pupil x 3 wavelengths (verify_v2.py):
+!     field    S4 TIR incid   margin    S3 incid   S5 incid   status
+!      0 deg      49.900      +8.99      26.14      32.90     closes
+!    +11 deg      48.146      +7.24      27.43      37.12     closes
+!    -11 deg      51.179     +10.27      24.53      26.89     closes
+!    +22 deg      45.575      +4.67      28.20      38.58     closes
+!    -22 deg      52.311     +11.40      22.83      20.26     closes
+!
+! ---------------------------------------------------------------------------
+! ASSUMPTIONS
+!  1. TILT SIGN. Faces are prescribed as outward NORMALS. +X is out of the page,
+!     so a right-handed rotation about +X sends zhat -> (0,-sinA,cosA); a normal
+!     at +B from +Z toward +Y therefore needs ADE = -B.
+!         face A  normal +12.8562 deg  ->  ADE -12.8562
+!         face B  normal -16.8798 deg  ->  ADE +16.8798
+!         face C  normal +52.9653 deg  ->  ADE -52.9653
+!         relay axis     +95.4386 deg  ->  ADE -95.4386
+!  2. RADIUS SIGN. ADE puts local +Z along the outward normal, so the prescribed
+!     radii carry through unchanged. CHECK VIA THE GLOBAL CENTRES OF CURVATURE:
+!         face A -> (0, -19.2579,  -66.3804)
+!         face B -> (0, +14.1213,  -16.3513)
+!         face C -> (0, -267.2870, -204.5363)
+!     If a centre lands on the wrong side, flip that RDY sign.
+!  3. REFLECT-MODE TOKEN ORDER is mode-then-glass ("REFL 'PRISM'", "TIRO
+!     'PRISM'"), the form confirmed working in this project. If your build wants
+!     glass-then-mode, swap the two tokens; if TIRO is rejected, use REFLTIRO.
+!  4. COUPLED FACE. S4 carries explicit values FIRST and pickups SECOND, so
+!     editing S2 drives S4 (one physical face) while the explicit values keep the
+!     geometry right even if a pickup line is refused.
+!  5. RELAY CHAIN. Exactly TWO reflections (S3, S4), so the system is back in
+!     unreflected space at S5 and every relay thickness is POSITIVE. CODE V
+!     propagates the S6 tilt downstream, so S7..SI need thicknesses only.
+!  6. FOCUS. Doublet BFD 10.353400 mm; the 0.5 mm cover plate shifts focus by
+!     t(1-1/n) = 0.170359 mm, so the doublet-to-plate airspace is
+!     10.353400 + 0.170359 - 0.500000 = 10.023759 mm. PIM then lands the display
+!     exactly on paraxial focus (it solved 38.1647 mm on the previous run).
+!  7. APERTURE DECENTRE. The prism clear apertures are decentred in local y
+!     (+5.52, +0.26, -2.08) via ADY. CODE V warns "Decentered aperture(s) ignored
+!     for this operation" on paraxial GO -- benign; they apply to real-ray trace.
+!  8. Apertures on SI are ignored by CODE V by design (it says so). They are kept
+!     to document the 12.0 x 10.0 mm display; add a dummy surface in contact with
+!     SI if you actually want the display to clip.
+! ============================================================================
+
+LEN NEW
+TIT 'TIER A V2b - off-axis freeform prism eyepiece (spherical faces)'
+DIM M
+
+WL   656.27  587.56  486.13
+REF  2
+WTW  1  1  1
+
+XAN  0.0   0.0    0.0   0.0    0.0
+YAN  0.0  11.0  -11.0  22.0  -22.0
+
+EPD  8.0
+
+! ---- private catalog: model glasses at the three working wavelengths --------
+!      order matches PWL:  C (656.27)   d (587.56)   F (486.13)
+!      PRISM  n_d 1.5300  V_d 56.00
+!      CROWN  n_d 1.5168  V_d 64.17
+!      FLINT  n_d 1.6727  V_d 32.25
+PRV
+PWL 656.27 587.56 486.13
+'PRISM' 1.527066 1.530000 1.536530
+'CROWN' 1.514303 1.516800 1.522357
+'FLINT' 1.666234 1.672700 1.687093
+END
+
+! ---- object at infinity ----------------------------------------------------
+SO  0  1e18
+
+! ---- S1 : exit pupil / eyebox. STOP, in air, global reference surface ------
+S   0  0.0
+STO S1
+CIR S1  4.0
+
+! ---- S2 : prism face A, refract air -> glass -------------------------------
+!      vertex (0, 0.000000, 18.000000)   normal (0, +0.222505, +0.974931)
+S  -86.5501  0.0  'PRISM'
+GLB S2 1
+XDE S2   0.0
+YDE S2   0.0
+ZDE S2  18.0
+ADE S2 -12.8562
+REX S2   5.0
+REY S2  19.0
+ADY S2   5.52
+
+! ---- S3 : prism face B, COATED MIRROR (21.374 deg is below critical) -------
+!      vertex (0, 0.760776, 27.679225)   normal (0, -0.290365, +0.956916)
+S  -46.0130  0.0  REFL 'PRISM'
+GLB S3 1
+XDE S3   0.0
+YDE S3   0.760776
+ZDE S3  27.679225
+ADE S3  16.8798
+REX S3   5.0
+REY S3  16.0
+ADY S3   0.26
+
+! ---- S4 : prism face A AGAIN, TIR (58.704 deg, +17.89 over critical) -------
+!      Same sphere, same vertex, same tilt, same aperture as S2.
+S  -86.5501  0.0  TIRO 'PRISM'
+GLB S4 1
+XDE S4   0.0
+YDE S4   0.0
+ZDE S4  18.0
+ADE S4 -12.8562
+REX S4   5.0
+REY S4  19.0
+ADY S4   5.52
+PIK RDY S4 S2
+PIK YDE S4 S2
+PIK ZDE S4 S2
+PIK ADE S4 S2
+
+! ---- S5 : prism face C, refract glass -> air -------------------------------
+!      vertex (0, 27.495340, 17.878452)  normal (0, +0.798271, +0.602299)
+S -369.2762  0.0
+GLB S5 1
+XDE S5   0.0
+YDE S5  27.495340
+ZDE S5  17.878452
+ADE S5 -52.9653
+REX S5   5.0
+REY S5  14.0
+ADY S5  -2.08
+
+! ---- S6-S8 : cemented doublet on the exit axis -----------------------------
+!      Exit axis (0, +0.995498, -0.094779) = 95.4386 deg from +Z -> ADE -95.4386.
+!      S6 vertex is 4.0 mm from the S5 vertex along that axis.
+!      APERTURES: see FIX 3. R1=6.4 and R2=-4.8 cap this group at Phi 9.6 mm,
+!      NOT the Phi 26 mm the prescription asks for. Set just under the radii.
+S    6.40   2.50  'CROWN'
+GLB S6 1
+XDE S6   0.0
+YDE S6  31.477332
+ZDE S6  17.499336
+ADE S6 -95.4386
+CIR S6   6.0
+
+S   -4.80   1.00  'FLINT'
+CIR S7   4.5
+
+S  -20.00  10.023759
+CIR S8   4.5
+
+! ---- S9-S10 : cover plate --------------------------------------------------
+S    0   0.50  'CROWN'
+CIR S9  10.0
+
+S    0   0.0
+CIR S10 10.0
+
+! ---- SI : microdisplay, 12.0 x 10.0 mm active area -------------------------
+SI   0   0.0
+REX SI   6.0
+REY SI   5.0
+
+! ---- paraxial image solve: land the display on the paraxial focus ----------
+PIM
+
+GO

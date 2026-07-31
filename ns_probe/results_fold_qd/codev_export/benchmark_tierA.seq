@@ -1,0 +1,143 @@
+! ============================================================================
+! TIER A -- off-axis, plane-symmetric freeform-prism eyepiece
+!
+! RAY PATH (central chief ray, pupil -> display):
+!   S1  exit pupil / eyebox (STOP, in air, ahead of all optics, global origin)
+!   S2  prism face A   refract   air -> glass      incidence 14.000 deg
+!   S3  prism face B   REFLECT   coated mirror     incidence 20.902 deg
+!   S4  prism face A   TIR       (SAME plane as S2) incidence 50.902 deg
+!   S5  prism face C   refract   glass -> air      incidence 15.098 deg
+!   S6-S8  cemented doublet, S9-S10 cover plate, SI microdisplay
+!
+!   Prism n_d 1.5300 -> critical angle 40.813 deg.
+!   S3 sits at 20.902 deg, BELOW critical, so it cannot be TIR: it is a coated
+!   mirror (REFL). S4 sits at 50.902 deg, +10.09 deg over critical, so it is
+!   true TIR (REFLTIRO). S2 and S4 are one physical face listed twice.
+!
+! ASSUMPTIONS
+!  1. Faces are given as (point, outward normal). +X is out of the page, so a
+!     right-handed rotation about +X carries +Z toward -Y. A normal lying at
+!     +B from +Z toward +Y therefore needs ADE = -B. Hence ADE = -14, +16, -80
+!     for faces A, B, C (magnitudes 14, 16, 80).
+!  2. Every surface is placed by GLOBAL COORDINATE REFERENCE to S1 (the pupil),
+!     not by a local negative-thickness chain, so the listed YDE/ZDE ARE the
+!     global coordinates and no reflected-space sign can scatter the layout.
+!     Intermediate thicknesses are therefore 0 through the prism. If your
+!     CODE V build rejects the GLB statement, the equivalent is to set
+!     "Global Reference Surface = 1" in each Surface Properties dialog.
+!  3. S4 carries explicit values FIRST and pickups SECOND, so that editing S2
+!     drives S4 (one physical face), while the explicit values keep the
+!     geometry correct even if a pickup line is not accepted.
+!  4. The relay is a straight chain after S6: CODE V propagates the S6 tilt to
+!     the following surfaces, so S7..SI need thicknesses only.
+!  5. The 0.5 mm cover plate shifts focus by t(1-1/n) = 0.170359 mm, so the
+!     doublet-to-plate airspace is 10.353400 + 0.170359 - 0.5 = 10.023798 mm.
+!     PIM is left on so CODE V lands the display on the paraxial focus.
+!  6. KNOWN GEOMETRY LIMIT (not a file error): with plane faces this fold only
+!     closes over about -11 deg to +2 deg of field. At +11 and +22 deg the ray
+!     leaves S4 travelling AWAY from S5 (negative segment), and at -22 deg the
+!     S4 incidence falls to 37.41 deg, below the 40.81 deg critical angle. Only
+!     the 0 deg and -11 deg fields complete the path. Curved/freeform faces are
+!     what make the full +-22 deg field close.
+! ============================================================================
+
+LEN NEW
+TIT 'TIER A - off-axis freeform prism eyepiece'
+DIM M
+
+WL   656.27  587.56  486.13
+REF  2
+WTW  1  1  1
+
+XAN  0.0   0.0    0.0   0.0    0.0
+YAN  0.0  11.0  -11.0  22.0  -22.0
+
+EPD  8.0
+
+! ---- object at infinity ----------------------------------------------------
+SO  0  1e18
+
+! ---- S1 : exit pupil / eyebox. STOP, in air, global reference surface ------
+S   0  0.0
+STO S1
+CIR S1  4.0
+
+! ---- S2 : prism face A, refract air -> glass -------------------------------
+S   0  0.0  1.53  56.0
+GLB S2 S1
+XDE S2   0.0
+YDE S2   0.0
+ZDE S2  18.0
+ADE S2 -14.0
+REX S2  12.0
+REY S2  10.0
+
+! ---- S3 : prism face B, COATED MIRROR (20.902 deg is below critical) -------
+S   0  0.0  1.53  56.0  REFL
+GLB S3 S1
+XDE S3   0.0
+YDE S3   0.640900
+ZDE S3  25.472600
+ADE S3  16.0
+REX S3  12.0
+REY S3   8.0
+
+! ---- S4 : prism face A AGAIN, TIR (50.902 deg, +10.09 over critical) -------
+!      Same plane, same tilt, same aperture as S2. Explicit values first,
+!      pickups second, so S2 drives S4.
+S   0  0.0  1.53  56.0  REFLTIRO
+GLB S4 S1
+XDE S4   0.0
+YDE S4   0.0
+ZDE S4  18.0
+ADE S4 -14.0
+REX S4  12.0
+REY S4  10.0
+PIK RDY S4 S2
+PIK YDE S4 S2
+PIK ZDE S4 S2
+PIK ADE S4 S2
+
+! ---- S5 : prism face C, refract glass -> air -------------------------------
+S   0  0.0
+GLB S5 S1
+XDE S5   0.0
+YDE S5  11.314400
+ZDE S5  17.778800
+ADE S5 -80.0
+REX S5  12.0
+REY S5   7.0
+
+! ---- S6-S8 : cemented doublet on the exit axis -----------------------------
+!      Exit axis is 56.5150 deg from +Z toward +Y -> ADE -56.5150.
+!      S6 vertex is 4.0 mm from the S5 vertex along that axis.
+S    6.40   2.50  1.51680  64.17
+GLB S6 S1
+XDE S6   0.0
+YDE S6  14.650522
+ZDE S6  19.985673
+ADE S6 -56.5150
+CIR S6   5.5
+
+S   -4.80   1.00  1.67270  32.25
+CIR S7   5.5
+
+S  -20.00  10.023798
+CIR S8   5.5
+
+! ---- S9-S10 : cover plate --------------------------------------------------
+S    0   0.50  1.51680  64.17
+CIR S9   5.5
+
+S    0   0.0
+CIR S10  5.5
+
+! ---- SI : microdisplay, 10.0 x 5.6 mm active area --------------------------
+SI   0   0.0
+REX SI   5.0
+REY SI   2.8
+
+! ---- paraxial image solve: land the display on the paraxial focus ----------
+PIM
+
+GO

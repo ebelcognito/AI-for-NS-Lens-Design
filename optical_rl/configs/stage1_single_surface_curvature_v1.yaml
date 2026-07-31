@@ -1,0 +1,66 @@
+env:
+  world_width: 300
+  world_height: 300
+
+  slab_right_x: 260
+  slab_thickness: 3
+  slab_height: 15
+  slab_center_y: 150
+
+  detector_x: 290
+  detector_center_y: 150
+  detector_height: 3
+
+  ref_index: 1.5
+
+  sag_min_mm: -2.0
+  sag_max_mm: 2.0
+  action_scale_sag_mm: 0.10
+
+  ray_origin_x: 10
+  ray_target_x: 290
+  ray_target_y_min: 145
+  ray_target_y_max: 155
+  object_depth_mm: 1000
+  mapping_numerator_mm: 710
+
+  max_steps: 100
+  max_initial_power: 0.0
+  max_reset_attempts: 100
+  boundary_penalty: 0.01
+  movement_penalty_coef: 0.001
+
+training:
+  algorithm: PPO
+  device: cuda
+  learning_rate: 0.0003
+  n_steps: 512
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  total_timesteps: 300000
+  ent_coef: 0.02
+  use_persistent_runner: true
+
+callbacks:
+  eval_freq: 2048
+  checkpoint_freq: 10240
+  progress_freq: 512
+  n_eval_episodes: 10
+  eval_verbose: 0
+
+logging:
+  results_dir: results
+  logs_dir: results/logs
+  models_dir: results/models
+  tensorboard_dir: results/tensorboard
+  visualizations_dir: results/visualizations
+
+evaluation:
+  n_holdout_episodes: 100
+  seed_start: 10000
+  success_threshold: 0.60
+
+debug:
+  verbose_timing: true
+  timing_log_interval: 500000

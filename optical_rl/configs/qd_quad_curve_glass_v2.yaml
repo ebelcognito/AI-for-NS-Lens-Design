@@ -1,0 +1,82 @@
+env:
+  world_width: 300
+  world_height: 300
+  source_x: 10
+  source_y: 100
+
+  # Ray targeting mode:
+  # - explicit: use ray1..ray4 target pairs below (backward-compatible default)
+  # - bundle: build a fixed deterministic bundle from the parameters below
+  ray_mode: bundle
+
+  detector_x: 290
+  detector_center_y: 150
+  detector_y_min: 120.0
+  detector_y_max: 180.0
+  detector_height: 6
+
+  # Bundle mode parameters (used only when ray_mode: bundle)
+  # Builds a 1D evenly spaced grid of `ray_count` targets spanning [ray_bundle_y_min, ray_bundle_y_max]
+  # at the plane x = ray_bundle_target_x. The bundle is constructed once at startup for determinism.
+  ray_count: 5
+  ray_bundle_target_x: 290
+  ray_bundle_y_min: 140.0
+  ray_bundle_y_max: 160.0
+
+  ray1_target_x: 290
+  ray1_target_y: 170
+  ray2_target_x: 290
+  ray2_target_y: 130
+  ray3_target_x: 290
+  ray3_target_y: 180
+  ray4_target_x: 290
+  ray4_target_y: 120
+
+  ref_index: 1.5
+
+  center_x: 150.0
+  center_y: 150.0
+  quadrant_margin: 5.0
+  right_side_x_max: 270.0
+  sag_min: -0.35
+  sag_max: 0.35
+
+qd:
+  algorithm: map_elites
+  seed: 0
+
+  # Fitness is detector power. Descriptor is what you want diversity over:
+  # - bbox: (width, height) of glass corners
+  # - irradiance: (centroid, spread) along detector, if irradiance bins are available
+  descriptor: bbox
+
+  # 2D archive discretization
+  bins: [20, 20]
+  desc_bounds:
+    - [10.0, 200.0]   # desc0 range
+    - [10.0, 200.0]   # desc1 range
+
+  # Initialization + mutation scales (in world units)
+  init_samples: 100
+  total_evals: 50000
+  init_corner_sigma: 10.0
+  mut_corner_sigma: 2.0
+  mut_sag_sigma: 0.02
+  sigma: 0.1
+
+  # Match env_v2 behavior: ignore top/bottom sag terms
+  ignore_top_bottom_sag: true
+
+  # Optional domain randomization (matches env_v2: randomized detector center)
+  randomize_detector_center_y: true
+
+  use_persistent_runner: true
+  timeout_s: 5.0
+  verbose_timing: false
+
+logging:
+  results_dir: results
+  logs_dir: results/logs
+  models_dir: results/models
+  tensorboard_dir: results/tensorboard
+  visualizations_dir: results/visualizations

@@ -1,0 +1,20 @@
+# CODE V export spec : fold_cell_5_6
+# dom_signature      : T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> T@B
+# descriptor         : TIR=5  spot=16.544  fitness=0.334  effic=0.591
+# units=mm (engine units ~= mm)  wl=587.56 nm  n=2.000000
+# CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X
+#
+OBJECT : infinity (afocal collimated input) ;  field YAN = 22.953533 deg
+STOP   : flat aperture at engine x=0.0  YDE=-1.3208 mm  semi-aperture=4.000 mm
+
+ i  role fc   event      type refl    YDE(mm)    ZDE(mm)   ADE(deg)          RDY(mm)           medium_after
+-----------------------------------------------------------------------------------------------------------
+ 1 entry  A refract  CYLINDER    -     0.0000    66.2695     2.5660        -452.8582                GLASS n
+ 2  fold  D     tir     PLANE    Y    30.0000    74.8490    90.0000  INFINITY (flat) REFL (stay in glass n)
+ 3  fold  B     tir  CYLINDER    Y     0.0000   106.8219     5.8071         -34.2985 REFL (stay in glass n)
+ 4  fold  B     tir  CYLINDER    Y     0.0000   106.8219     5.8071         -34.2985 REFL (stay in glass n)
+ 5  fold  T     tir     PLANE    Y   -30.0000    79.2445    90.0000  INFINITY (flat) REFL (stay in glass n)
+ 6  fold  A     tir  CYLINDER    Y     0.0000    66.2695     2.5660        -452.8582 REFL (stay in glass n)
+ 7  exit  B refract  CYLINDER    -     0.0000   106.8219     5.8071         -34.2985                    AIR
+
+IMAGE  : PLANE at engine x=120.0  ZDE=120.0000 mm  (detector plane; refocus in CODE V as desired)

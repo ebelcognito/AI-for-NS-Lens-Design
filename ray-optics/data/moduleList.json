@@ -1,0 +1,76 @@
+[
+  {
+    "id": "defaultCategory",
+    "content": [
+      {
+        "id": "FresnelLens",
+        "contributors": [
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "ContSpectrum",
+        "contributors": [
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "RainbowPointSource",
+        "contributors": [
+          "Brad Goodman"
+        ]
+      },
+      {
+        "id": "CoatedLens",
+        "contributors": [
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "CircleSource",
+        "contributors": [
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "EllipticalMirror",
+        "contributors": [
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "Chaff",
+        "contributors": [
+          "Stas Fainer",
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "BeamExpander",
+        "contributors": [
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "RayRelay",
+        "contributors": [
+          "Stas Fainer",
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "OpticalFiber",
+        "contributors": [
+          "josephernest",
+          "Yi-Ting Tu"
+        ]
+      },
+      {
+        "id": "CubeBeamSplitter",
+        "contributors": [
+          "Feng"
+        ]
+      }
+    ]
+  }
+]

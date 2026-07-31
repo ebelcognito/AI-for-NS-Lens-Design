@@ -1,0 +1,400 @@
+/*
+ * Copyright 2024 The Ray Optics Simulation authors and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import CustomArcSurface from '../../../src/core/sceneObjs/other/CustomArcSurface.js';
+import Scene from '../../../src/core/Scene.js';
+import { MockUser } from '../helpers/test-utils.js';
+import geometry from '../../../src/core/geometry.js';
+
+describe('CustomArcSurface', () => {
+  let scene;
+  let obj;
+  let user;
+
+  beforeEach(() => {
+    scene = new Scene();
+    scene.gridSize = 20;
+    obj = new CustomArcSurface(scene);
+    user = new MockUser(obj);
+  });
+
+  it('creates with three clicks', () => {
+    user.click(100, 100); // First endpoint
+    user.click(200, 100); // Second endpoint
+    user.click(150, 150); // Control point on arc
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 100, y: 100 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 150, y: 150 }
+    });
+  });
+
+  it('creates with drag and click', () => {
+    user.drag(100, 100, 200, 100); // Drag for endpoints
+    user.click(150, 150); // Click for control point
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 100, y: 100 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 150, y: 150 }
+    });
+  });
+
+  it('creates with grid snapping', () => {
+    scene.snapToGrid = true;
+    user.click(101, 102); // Should snap to (100, 100)
+    user.click(198, 97); // Should snap to (200, 100)
+    user.click(152, 148); // Should snap to (160, 140)
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 100, y: 100 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 160, y: 140 }
+    });
+  });
+
+  it('hovers with mouse', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+    
+    // Test hover on endpoints and control point
+    expect(user.hover(101, 101)).toBeTruthy(); // Near p1
+    expect(user.hover(201, 101)).toBeTruthy(); // Near p2
+    expect(user.hover(151, 151)).toBeTruthy(); // Near p3
+
+    // Test hover on arc segments
+    const center = geometry.linesIntersection(
+      geometry.perpendicularBisector(geometry.line(obj.p1, obj.p3)),
+      geometry.perpendicularBisector(geometry.line(obj.p2, obj.p3))
+    );
+    const radius = geometry.distance(center, obj.p3);
+    const pointOnArc = {
+      x: center.x + radius * Math.cos(Math.PI / 4),
+      y: center.y + radius * Math.sin(Math.PI / 4)
+    };
+    expect(user.hover(pointOnArc.x, pointOnArc.y)).toBeTruthy();
+    
+    // Test point far from object
+    expect(user.hover(300, 300)).toBeFalsy();
+  });
+
+  it('drags endpoints with mouse', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.drag(100, 100, 120, 120); // Drag p1
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 120, y: 120 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 150, y: 150 }
+    });
+  });
+
+  it('drags control point with mouse', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.drag(150, 150, 150, 180); // Drag p3
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 100, y: 100 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 150, y: 180 }
+    });
+  });
+
+  it('drags with grid snapping', () => {
+    scene.snapToGrid = true;
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.drag(101, 101, 118, 122); // Should snap to (120, 120)
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 120, y: 120 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 160, y: 160 }
+    });
+  });
+
+  it('hovers over surface with colinear points', () => {
+    // Create arc surface with colinear points
+    user.click(0, 0);       // First endpoint
+    user.click(0, 100);     // Second endpoint
+    user.click(0, 50);      // Control point (colinear)
+
+    // Test hovering over endpoints and control point
+    expect(user.hover(1, 0)).toBeTruthy();    // Near p1
+    expect(user.hover(1, 100)).toBeTruthy();  // Near p2
+    expect(user.hover(1, 50)).toBeTruthy();   // Near p3 (colinear)
+
+    // Test hovering over line segments (since points are colinear)
+    expect(user.hover(0, 25)).toBeTruthy();   // Between p1 and p3
+    expect(user.hover(0, 75)).toBeTruthy();   // Between p3 and p2
+
+    // Test hovering over non-object area
+    expect(user.hover(50, 50)).toBeFalsy();   // Far from line
+    expect(user.hover(0, 150)).toBeFalsy();   // Beyond endpoints
+  });
+
+  it('moves the entire object by a vector', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.move(50, 100);
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 150, y: 200 },
+      p2: { x: 250, y: 200 },
+      p3: { x: 200, y: 250 }
+    });
+  });
+
+  it('rotates 90 degrees around default center (p3)', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.rotate(Math.PI / 2); // 90 degrees counter-clockwise
+    const result = obj.serialize();
+    expect(result.p1.x).toBeCloseTo(200, 5); // p1 rotates around p3
+    expect(result.p1.y).toBeCloseTo(100, 5);
+    expect(result.p2.x).toBeCloseTo(200, 5); // p2 rotates around p3
+    expect(result.p2.y).toBeCloseTo(200, 5);
+    expect(result.p3.x).toBeCloseTo(150, 5); // p3 stays in place (center of rotation)
+    expect(result.p3.y).toBeCloseTo(150, 5);
+    expect(result.type).toBe('CustomArcSurface');
+  });
+
+  it('rotates 90 degrees around explicit center', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.rotate(Math.PI / 2, { x: 0, y: 0 }); // 90 degrees around origin
+    const result = obj.serialize();
+    expect(result.p1.x).toBeCloseTo(-100, 5); // p1 rotates around origin
+    expect(result.p1.y).toBeCloseTo(100, 5);
+    expect(result.p2.x).toBeCloseTo(-100, 5); // p2 rotates around origin
+    expect(result.p2.y).toBeCloseTo(200, 5);
+    expect(result.p3.x).toBeCloseTo(-150, 5); // p3 rotates around origin
+    expect(result.p3.y).toBeCloseTo(150, 5);
+    expect(result.type).toBe('CustomArcSurface');
+  });
+
+  it('scales to 50% around default center (p3)', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.scale(0.5); // Scale to 50%
+    const result = obj.serialize();
+    expect(result.p1.x).toBeCloseTo(125, 5); // p1 scales toward p3
+    expect(result.p1.y).toBeCloseTo(125, 5);
+    expect(result.p2.x).toBeCloseTo(175, 5); // p2 scales toward p3
+    expect(result.p2.y).toBeCloseTo(125, 5);
+    expect(result.p3.x).toBeCloseTo(150, 5); // p3 stays in place (center of scaling)
+    expect(result.p3.y).toBeCloseTo(150, 5);
+    expect(result.type).toBe('CustomArcSurface');
+  });
+
+  it('scales to 50% around explicit center', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    user.scale(0.5, { x: 0, y: 0 }); // Scale to 50% around origin
+    const result = obj.serialize();
+    expect(result.p1.x).toBeCloseTo(50, 5); // p1 scales toward origin
+    expect(result.p1.y).toBeCloseTo(50, 5);
+    expect(result.p2.x).toBeCloseTo(100, 5); // p2 scales toward origin
+    expect(result.p2.y).toBeCloseTo(50, 5);
+    expect(result.p3.x).toBeCloseTo(75, 5); // p3 scales toward origin
+    expect(result.p3.y).toBeCloseTo(75, 5);
+    expect(result.type).toBe('CustomArcSurface');
+  });
+
+  it('sets properties with default outRays', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+    user.set("θ<sub>1</sub> =", "\\theta_0+0.1");
+    user.set("P<sub>1</sub> =", "0.8\\cdot P_0");
+    user.set("θ<sub>2</sub> =", "\\pi-\\theta_0+0.05");
+    user.set("P<sub>2</sub> =", "P_0-P_1");
+
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 100, y: 100 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 150, y: 150 },
+      outRays: [
+        {
+          eqnTheta: "\\theta_0+0.1",
+          eqnP: "0.8\\cdot P_0"
+        },
+        {
+          eqnTheta: "\\pi-\\theta_0+0.05",
+          eqnP: "P_0-P_1"
+        }
+      ]
+    });
+  });
+
+  it('sets twoSided property', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+    user.set("{{simulator:sceneObjs.BaseCustomSurface.twoSided}}", true);
+
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 100, y: 100 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 150, y: 150 },
+      twoSided: true
+    });
+  });
+
+  it('sets properties with twoSided and custom outRays', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+    user.set("θ<sub>1</sub> =", "0");
+    user.set("P<sub>1</sub> =", "P_0");
+    user.set("θ<sub>2</sub> =", "\\pi");
+    user.set("P<sub>2</sub> =", "0");
+    user.set("{{simulator:sceneObjs.BaseCustomSurface.twoSided}}", true);
+
+    expect(obj.serialize()).toEqual({
+      type: 'CustomArcSurface',
+      p1: { x: 100, y: 100 },
+      p2: { x: 200, y: 100 },
+      p3: { x: 150, y: 150 },
+      outRays: [
+        {
+          eqnTheta: "0",
+          eqnP: "P_0"
+        },
+        {
+          eqnTheta: "\\pi",
+          eqnP: "0"
+        }
+      ],
+      twoSided: true
+    });
+  });
+
+  it('adds outgoing rays using button', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    // Initial state has 2 outRays
+    expect(obj.outRays.length).toBe(2);
+
+    // Add a third ray
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.addOutgoingRay}}');
+    expect(obj.outRays.length).toBe(3);
+    expect(obj.outRays[2]).toEqual({
+      eqnTheta: '\\theta_0',
+      eqnP: 'P_0'
+    });
+
+    // Add a fourth ray
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.addOutgoingRay}}');
+    expect(obj.outRays.length).toBe(4);
+    expect(obj.outRays[3]).toEqual({
+      eqnTheta: '\\theta_0',
+      eqnP: 'P_0'
+    });
+
+    // Verify serialization includes all rays
+    const result = obj.serialize();
+    expect(result.outRays.length).toBe(4);
+    expect(result.type).toBe('CustomArcSurface');
+  });
+
+  it('removes outgoing rays using button', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    // Add an extra ray first
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.addOutgoingRay}}');
+    expect(obj.outRays.length).toBe(3);
+
+    // Remove one ray
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.removeOutgoingRay}}');
+    expect(obj.outRays.length).toBe(2);
+
+    // Remove another ray
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.removeOutgoingRay}}');
+    expect(obj.outRays.length).toBe(1);
+
+    // Remove the last ray
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.removeOutgoingRay}}');
+    expect(obj.outRays.length).toBe(0);
+
+    // Verify serialization
+    const result = obj.serialize();
+    expect(result.outRays.length).toBe(0);
+    expect(result.type).toBe('CustomArcSurface');
+  });
+
+  it('adds and removes outgoing rays in sequence', () => {
+    user.click(100, 100);
+    user.click(200, 100);
+    user.click(150, 150);
+
+    // Start with 2 rays
+    expect(obj.outRays.length).toBe(2);
+
+    // Add two rays
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.addOutgoingRay}}');
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.addOutgoingRay}}');
+    expect(obj.outRays.length).toBe(4);
+
+    // Remove one ray
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.removeOutgoingRay}}');
+    expect(obj.outRays.length).toBe(3);
+
+    // Add one more ray
+    user.clickButton('{{simulator:sceneObjs.BaseCustomSurface.addOutgoingRay}}');
+    expect(obj.outRays.length).toBe(4);
+
+    // Set properties on the newly added rays
+    user.set("θ<sub>3</sub> =", "\\theta_0/2");
+    user.set("P<sub>3</sub> =", "0.5\\cdot P_0");
+    user.set("θ<sub>4</sub> =", "\\pi/4");
+    user.set("P<sub>4</sub> =", "0.25\\cdot P_0");
+
+    const result = obj.serialize();
+    expect(result.outRays.length).toBe(4);
+    expect(result.outRays[2].eqnTheta).toBe("\\theta_0/2");
+    expect(result.outRays[2].eqnP).toBe("0.5\\cdot P_0");
+    expect(result.outRays[3].eqnTheta).toBe("\\pi/4");
+    expect(result.outRays[3].eqnP).toBe("0.25\\cdot P_0");
+  });
+});
+

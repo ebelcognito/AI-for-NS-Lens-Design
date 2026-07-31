@@ -1,0 +1,68 @@
+{
+  "id": "fold_cell_1_15",
+  "descriptor": {
+    "tir_count": 1,
+    "thinness_T": 118.66586026180919,
+    "spot": 1.580450213185654,
+    "fitness": 0.9617541861100385,
+    "efficiency": 0.9664935655745786
+  },
+  "genotype": {
+    "ray_y": 15.978685813475261,
+    "ang": 45.34623383555709,
+    "cx": 35.0,
+    "thick": 45.0,
+    "fsag": 9.99557584296358,
+    "bsag": 17.372031069772376,
+    "tilt_a": 22.607578448493662,
+    "tilt_b": 1.0339534628498623,
+    "n": 1.5
+  },
+  "dom_signature": "TIR@D -> T@B",
+  "coordinate_map": "CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X",
+  "units": "mm (engine units ~= mm)",
+  "wavelength_nm": 587.56,
+  "refractive_index": 1.5,
+  "object": "infinity (afocal collimated input)",
+  "field_YAN_deg": 45.34623383555709,
+  "stop": {
+    "at_engine_x": 0.0,
+    "YDE_mm": 15.978686,
+    "semi_aperture_mm": 4.0,
+    "note": "reproduces the input beam offset+width"
+  },
+  "image": {
+    "type": "PLANE",
+    "at_engine_x": 120.0,
+    "ZDE_mm": 120.0,
+    "note": "detector plane; refocus in CODE V as desired"
+  },
+  "surfaces": [
+    {
+      "i": 1,
+      "role": "entry",
+      "face": "D",
+      "event": "tir",
+      "type": "PLANE",
+      "reflective": true,
+      "YDE_mm": 30.0,
+      "ZDE_mm": 28.483057,
+      "ADE_deg": 90.0,
+      "RDY_mm": "INFINITY (flat)",
+      "medium_after": "REFL (stay in glass n)"
+    },
+    {
+      "i": 2,
+      "role": "exit",
+      "face": "B",
+      "event": "refract",
+      "type": "CYLINDER",
+      "reflective": false,
+      "YDE_mm": 0.0,
+      "ZDE_mm": 74.872031,
+      "ADE_deg": 1.033953,
+      "RDY_mm": -34.599557,
+      "medium_after": "GLASS n"
+    }
+  ]
+}

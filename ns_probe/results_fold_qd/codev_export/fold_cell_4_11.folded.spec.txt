@@ -1,0 +1,21 @@
+# FOLDED-AXIS CODE V spec : fold_cell_4_11
+# dom_signature          : T@A -> TIR@D -> TIR@B -> TIR@A -> TIR@T -> T@B
+# n=1.5000  wl=587.56 nm  critical=41.810 deg
+# Real thicknesses thread the chief ray; folds are REFL/TIRO (stay in glass).
+# thi_sign flips at each reflection (CODE V reflected space).
+#
+OBJECT: infinity (collimated)   field YAN = 23.8848 deg
+STOP  : at source, YDE=9.4592, semi-aperture=4.000 mm
+        thickness stop->face1 = 37.2073 mm
+
+ i face    event  kind       RDY(mm)   THI_out   incid  deflect  tilt(loc)  medium_after
+----------------------------------------------------------------------------------------
+ 1    A  refract   cyl     -156.0548   11.8446  10.876    3.650   -10.8762         GLASS
+ 2    D      tir  flat           INF  -28.4868  62.465  -55.069   -27.5345    REFL/glass
+ 3    B      tir   cyl     -197.5431   39.5413  48.107  -83.786   -41.8930    REFL/glass
+ 4    A      tir   cyl     -156.0548  -17.1783  52.132   75.737    37.8684    REFL/glass
+ 5    T      tir  flat           INF   13.1297  54.416   71.168    35.5838    REFL/glass
+ 6    B  refract   cyl     -197.5431   63.9225  26.783   15.743    26.7830           AIR
+
+IMAGE : detector plane, 4 folds total.  sensor hit (engine x,y) = (120.000, 27.545)
+        semi-aperture (detector half-size) = 20.0 mm  <-- edit to size the sensor

@@ -1,0 +1,107 @@
+{
+  "id": "fold_cell_3_5",
+  "descriptor": {
+    "tir_count": 3,
+    "thinness_T": 48.11707860634269,
+    "spot": 2.4234148809336666,
+    "fitness": 0.9071528329604461,
+    "efficiency": 0.9071528329604461
+  },
+  "genotype": {
+    "ray_y": -13.068824459845166,
+    "ang": 26.198546061384334,
+    "cx": 85.0,
+    "thick": 20.338255604322555,
+    "fsag": -11.900777027087093,
+    "bsag": 4.78027818834128,
+    "tilt_a": 14.311650446542806,
+    "tilt_b": 1.0586630916347917,
+    "n": 1.5
+  },
+  "dom_signature": "T@A -> TIR@D -> TIR@B -> TIR@B -> T@B",
+  "coordinate_map": "CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X",
+  "units": "mm (engine units ~= mm)",
+  "wavelength_nm": 587.56,
+  "refractive_index": 1.5,
+  "object": "infinity (afocal collimated input)",
+  "field_YAN_deg": 26.198546061384334,
+  "stop": {
+    "at_engine_x": 0.0,
+    "YDE_mm": -13.068824,
+    "semi_aperture_mm": 4.0,
+    "note": "reproduces the input beam offset+width"
+  },
+  "image": {
+    "type": "PLANE",
+    "at_engine_x": 120.0,
+    "ZDE_mm": 120.0,
+    "note": "detector plane; refocus in CODE V as desired"
+  },
+  "surfaces": [
+    {
+      "i": 1,
+      "role": "entry",
+      "face": "A",
+      "event": "refract",
+      "type": "CYLINDER",
+      "reflective": false,
+      "YDE_mm": 0.0,
+      "ZDE_mm": 86.731649,
+      "ADE_deg": 14.31165,
+      "RDY_mm": -47.046054,
+      "medium_after": "GLASS n"
+    },
+    {
+      "i": 2,
+      "role": "fold",
+      "face": "D",
+      "event": "tir",
+      "type": "PLANE",
+      "reflective": true,
+      "YDE_mm": 30.0,
+      "ZDE_mm": 80.896111,
+      "ADE_deg": 90.0,
+      "RDY_mm": "INFINITY (flat)",
+      "medium_after": "REFL (stay in glass n)"
+    },
+    {
+      "i": 3,
+      "role": "fold",
+      "face": "B",
+      "event": "tir",
+      "type": "CYLINDER",
+      "reflective": true,
+      "YDE_mm": 0.0,
+      "ZDE_mm": 99.949406,
+      "ADE_deg": 1.058663,
+      "RDY_mm": -96.57396,
+      "medium_after": "REFL (stay in glass n)"
+    },
+    {
+      "i": 4,
+      "role": "fold",
+      "face": "B",
+      "event": "tir",
+      "type": "CYLINDER",
+      "reflective": true,
+      "YDE_mm": 0.0,
+      "ZDE_mm": 99.949406,
+      "ADE_deg": 1.058663,
+      "RDY_mm": -96.57396,
+      "medium_after": "REFL (stay in glass n)"
+    },
+    {
+      "i": 5,
+      "role": "exit",
+      "face": "B",
+      "event": "refract",
+      "type": "CYLINDER",
+      "reflective": false,
+      "YDE_mm": 0.0,
+      "ZDE_mm": 99.949406,
+      "ADE_deg": 1.058663,
+      "RDY_mm": -96.57396,
+      "medium_after": "AIR"
+    }
+  ]
+}

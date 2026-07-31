@@ -1,0 +1,111 @@
+<!--
+  Copyright 2024 The Ray Optics Simulation authors and contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{title}}</title>
+<meta property="og:title" content="{{title}}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{absUrl}}">
+<meta property="og:image" content="{{ogImage}}">
+<meta property="og:description" content="{{t "main:project.name"}}">
+<meta property="og:locale" content="{{lang}}">
+<link rel="canonical" href="{{absUrl}}">
+{{#each supportedLangs}}
+<link rel="alternate" hreflang="{{this.lang}}" href="{{this.absUrl}}">
+{{/each}}
+<link rel="stylesheet" href="{{thirdpartyUrl}}/bootstrap/bootstrap.min.css">
+<link rel="icon" href="{{imgUrl}}/icon.png" type="image/png">
+<style>
+  .brand {
+    font-size: 12pt;
+    color: #888;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 0px;
+    height: 40px;
+    line-height: 40px;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .brand:hover {
+    text-decoration: none;
+  }
+
+  .github-button-container {
+    color: #888;
+    margin-top: 7px;
+    margin-bottom: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding: 0px;
+    height: 40px;
+    width: 92px;
+    line-height: 40px;
+    position: relative;
+    text-align: center;
+    float: right;
+  }
+
+  .github-button-container a {
+    color: transparent;
+  }
+
+  .navul {
+    font-size: 11pt;
+  }
+
+  .navul a {
+    color: #555;
+    float: left;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 2px;
+    height: 40px;
+    line-height: 40px;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .clearfix {
+    clear: both;
+  }
+
+  .navul a:hover {
+    border-bottom: 3px solid #CCC;
+    text-decoration: none;
+  }
+
+  .navul a.active {
+    color: #000;
+    border-bottom: 3px solid gray;
+  }
+
+  body {
+    padding-top: 72px;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  }
+</style>
+<script defer src="{{thirdpartyUrl}}/jquery.min.js"></script>
+<script defer src="{{thirdpartyUrl}}/bootstrap/bootstrap.min.js"></script>
+<script async defer src="https://buttons.github.io/buttons.js"></script>

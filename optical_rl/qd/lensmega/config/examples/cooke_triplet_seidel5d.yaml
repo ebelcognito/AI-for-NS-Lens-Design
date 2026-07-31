@@ -1,0 +1,99 @@
+# ============================================================================
+# Cooke Triplet — 5-D Seidel BC experiment
+# ============================================================================
+# Identical problem/parameterisation to cooke_triplet_materials.yaml but
+# the behavioural descriptor uses ALL FIVE Seidel coefficients (S1..S5).
+# The purpose is to measure, without saturation ceilings, how archive
+# coverage of Seidel space grows with spot-RMS regime.
+#
+# Grid: 12^5 = 248,832 cells.  At pop=18 × ~50k iters ≈ 900k evaluations
+# we'd expect on the order of 20-40k filled cells — enough for clean
+# per-tier statistics without the 2-D ceiling problem.
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/cooke_smaller_ap_1mm.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.486, 0.587, 0.656]
+  object_depth_mm: -20000.0
+  stop_surface_index: 4
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 5, 6]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5]
+  variable_flange: true
+  variable_materials: true
+  free_material_indices: [0, 1, 2]
+
+  theta_bounds:
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [0.8, 3.2]
+    - [0.5, 10.0]
+    - [0.8, 3.2]
+    - [0.5, 10.0]
+    - [0.5, 10.0]
+    - [0.8, 3.2]
+    - [30.0, 65.0]
+    - [1.45, 1.85]
+    - [25, 75]
+    - [1.45, 1.85]
+    - [25, 75]
+    - [1.45, 1.85]
+    - [25, 75]
+
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 1
+
+descriptor:
+  kind: seidel
+  params:
+    terms: ["S1", "S2", "S3", "S4", "S5"]
+
+algorithm:
+  population_size: 18
+  initial_sigma: 0.5
+  cma_eta: 0.15
+  cma_seed: 42
+  seed_count: 3000            # was 1000 — need broader 5-D coverage
+  calibration_count: 3000     # was 1000 — 5-D bounds are noisier
+  iterations: 50000           # was 200k; 50k gives clean signal w/o saturation
+  new_cell_bonus: 1.0e6
+  log_every: 50
+  restart_patience: 5
+
+archive:
+  bins: [12, 12, 12, 12, 12]      # 5-D grid, 12 bins per axis = 248,832 cells
+  bounds: null                    # auto-calibrate all 5 axes
+  bound_calibration_pad: 0.10     # extra padding for 5-D calibration noise
+
+io:
+  results_dir: results/lensmega
+  run_name: cooke_triplet_seidel5d
+  checkpoint_every: 200
+  device: auto
+  elite_fitness_threshold: -0.2
+  refine_efl_penalty_weight: 20.0
+  refine_invalid_penalty_weight: 10.0
+  refine_intersect_penalty_weight: 2.0
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 0.0001
+  refine_field_weights: [1.0, 2.0, 4.0]
+  refine_stability_samples: 20
+  refine_stability_perturbation: 0.005

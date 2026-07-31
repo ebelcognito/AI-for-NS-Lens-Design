@@ -1,0 +1,82 @@
+# ============================================================================
+# Cooke Triplet — Full DOF (curvatures + thicknesses + d_sensor)
+# ============================================================================
+# All 6 curvatures, all 6 inter-surface gaps, and d_sensor are free.
+# 13-D theta total.  No derived surface.  Soft EFL penalty.
+#
+# Gap bounds derived from cooke.json nominal values with generous margins.
+# Cooke nominal gaps: 3.26, 6.01, 1.00, 2.12, 2.75, 2.95 mm
+# d_sensor nominal: 60.44 mm
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/cooke_smaller_ap_1mm.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.587]
+  object_depth_mm: -20000.0
+  stop_surface_index: 4
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 5, 6]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 5.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5]
+  variable_flange: true
+
+  theta_bounds:
+    # --- 6 curvatures ---
+    - [-0.08, 0.08]     # c0
+    - [-0.08, 0.08]     # c1
+    - [-0.08, 0.08]     # c2
+    - [-0.08, 0.08]     # c3
+    - [-0.08, 0.08]     # c5
+    - [-0.08, 0.08]     # c6
+    # --- 6 gaps (mm) ---
+    - [2.0, 4.0]        # g0→1  Element 1 thickness (nominal 3.26)
+    - [3.0, 9.0]       # g1→2  Air gap (nominal 6.01)
+    - [0.5, 3.0]        # g2→3  Element 2 thickness (nominal 1.00)
+    - [0.5, 5.0]        # g3→4  Air gap to stop (nominal 2.12)
+    - [0.5, 5.0]        # g4→5  Stop to Element 3 (nominal 2.75)
+    - [1.0, 6.0]        # g5→6  Element 3 thickness (nominal 2.95)
+    # --- flange (last surface to sensor, nominal ~42 mm) ---
+    - [30.0, 55.0]      # flange
+
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: true
+  descriptor_field_index: 1
+
+descriptor:
+  kind: zernike
+  params:
+    noll_indices: [7, 11]
+    num_rays: 256
+
+algorithm:
+  population_size: 18
+  initial_sigma: 0.75
+  cma_eta: 0.05
+  cma_seed: 0
+  seed_count: 4000
+  calibration_count: 4000
+  iterations: 50000
+  new_cell_bonus: 1.0e6
+  log_every: 50
+
+archive:
+  bins: [100, 100]
+  bounds: null
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: cooke_triplet_full_dof
+  checkpoint_every: 100
+  device: auto

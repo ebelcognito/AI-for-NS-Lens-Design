@@ -1,0 +1,24 @@
+# CODE V export spec : fold_cell_8_6
+# dom_signature      : T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> TIR@B -> TIR@A -> T@B
+# descriptor         : TIR=9  spot=36.270  fitness=0.039  effic=0.104
+# units=mm (engine units ~= mm)  wl=587.56 nm  n=2.000000
+# CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X
+#
+OBJECT : infinity (afocal collimated input) ;  field YAN = 11.436049 deg
+STOP   : flat aperture at engine x=0.0  YDE=10.9368 mm  semi-aperture=4.000 mm
+
+ i  role fc   event      type refl    YDE(mm)    ZDE(mm)   ADE(deg)          RDY(mm)           medium_after
+-----------------------------------------------------------------------------------------------------------
+ 1 entry  A refract  CYLINDER    -     0.0000    72.3533     8.9197         -95.4990                GLASS n
+ 2  fold  D     tir     PLANE    Y    30.0000    70.3751    90.0000  INFINITY (flat) REFL (stay in glass n)
+ 3  fold  B     tir  CYLINDER    Y     0.0000    97.5144     9.3500         -39.4133 REFL (stay in glass n)
+ 4  fold  B     tir  CYLINDER    Y     0.0000    97.5144     9.3500         -39.4133 REFL (stay in glass n)
+ 5  fold  B     tir  CYLINDER    Y     0.0000    97.5144     9.3500         -39.4133 REFL (stay in glass n)
+ 6  fold  B     tir  CYLINDER    Y     0.0000    97.5144     9.3500         -39.4133 REFL (stay in glass n)
+ 7  fold  T     tir     PLANE    Y   -30.0000    80.0231    90.0000  INFINITY (flat) REFL (stay in glass n)
+ 8  fold  A     tir  CYLINDER    Y     0.0000    72.3533     8.9197         -95.4990 REFL (stay in glass n)
+ 9  fold  B     tir  CYLINDER    Y     0.0000    97.5144     9.3500         -39.4133 REFL (stay in glass n)
+10  fold  A     tir  CYLINDER    Y     0.0000    72.3533     8.9197         -95.4990 REFL (stay in glass n)
+11  exit  B refract  CYLINDER    -     0.0000    97.5144     9.3500         -39.4133                    AIR
+
+IMAGE  : PLANE at engine x=120.0  ZDE=120.0000 mm  (detector plane; refocus in CODE V as desired)

@@ -1,0 +1,57 @@
+<!--
+  Copyright 2024 The Ray Optics Simulation authors and contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="{{lang}}">
+
+<head>
+  {{> head}}
+</head>
+
+<body>
+  {{> navbar}}
+  <div class="container">
+    <div align="center">
+      <h3 style="margin-bottom: 4px"><img src="{{imgUrl}}/icon.png" alt="Icon" width="64" height="64" style="margin-bottom: 3px;"><br>
+        {{t "main:project.name"}}</h3>
+      <b>{{t "main:project.description"}}</b><br>
+      <div style="font-size: 12px; margin-top: 4px; font-family: monospace;">v{{version}}</div>
+    </div>
+    <br>
+    <p>{{t "main:aboutPage.description"}}</p>
+
+    <p>
+      <b><a href="https://github.com/ricktu288/ray-optics?tab=readme-ov-file#cite-this-project">{{t "main:aboutPage.cite"}}</a></b>
+    </p>
+    <p><strong>{{t "main:aboutPage.mainAuthors" count=mainAuthors.length}}</strong></p>
+    <ul>
+      {{#each mainAuthors}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ul>
+    <p><strong>{{t "main:aboutPage.contributors"}}</strong></p>
+    <ul>
+      {{#each contributors}}
+      <li>{{{this}}}</li>
+      {{/each}}
+    </ul>
+    {{t "main:meta.parentheses" main="" sub=(t "aboutPage.contributorSorting")}}
+
+    {{> footer}}
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+! STEP 1: the working slab + exactly ONE fold (TIR @D, the top flat edge).
+! Isolates the REFLECTION convention. S2 (entry) is unchanged from diag_slab (it traced).
+! We expect: beam enters at A (up-right), hits the D mirror, reflects DOWN-right, reaches image.
+LEN NEW
+DIM M
+WL 587.56
+REF 1
+EPD 8.000000
+YAN 23.884815
+PRV
+PWL 587.56
+'FOLDN' 1.500000
+END
+SO 0 1e18
+YDE S1 9.459225
+STO S1
+THI S1 37.207328
+! S2: A entry (refract into glass) -- SAME as the slab, but THI shortened to reach D (11.84 mm)
+S 156.054833 11.844593 'FOLDN'
+ADE S2 10.876174
+! S3: D fold -- flat top edge, TIR (stay in glass). ADE puts the mirror normal ~horizontal
+!     in the frame S2 propagated (local +Z is at 10.876 deg; D normal wants engine +Y=90 deg).
+!     Reflected space -> THI is NEGATIVE.
+S 0 -25.0 TIRO 'FOLDN'
+ADE S3 79.123826
+! image just after the fold, so we can SEE the reflected beam direction
+SI 0 0
+CIR SI 20.0
+GO

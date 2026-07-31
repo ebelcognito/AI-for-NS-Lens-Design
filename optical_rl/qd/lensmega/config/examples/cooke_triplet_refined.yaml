@@ -1,0 +1,86 @@
+# ============================================================================
+# Cooke Triplet — Full DOF, Zernike descriptors, refined bounds
+# ============================================================================
+# Same sign-constrained curvature bounds as cooke_triplet_seidel.yaml but
+# using Zernike wavefront descriptors (coma Z7 + spherical Z11) for the
+# behaviour space.  Run both configs to compare Seidel vs Zernike BCs on
+# the same design space.
+#
+# Cooke nominal curvatures (1/mm):
+#   c0=+0.0454  c1=-0.0023  c2=-0.0450  c3=+0.0493  c5=+0.0125  c6=-0.0544
+# Cooke nominal gaps (mm):
+#   g0=3.26  g1=6.01  g2=1.00  g3=2.12  g4=2.75  g5=2.95
+# d_sensor nominal: 60.44 mm
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/cooke_smaller_ap_1mm.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.587]
+  object_depth_mm: -20000.0
+  stop_surface_index: 4
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 5, 6]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 8.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5]
+  variable_flange: true
+
+  theta_bounds:
+    # --- 6 curvatures (sign-constrained around Cooke nominal) ---
+    - [0.015, 0.070]      # c0  +0.0454 nom  E1 front: positive (converging)
+    - [-0.035, 0.025]     # c1  -0.0023 nom  E1 back:  weak, allows sign flip
+    - [-0.070, -0.010]    # c2  -0.0450 nom  E2 front: negative (diverging)
+    - [0.015, 0.075]      # c3  +0.0493 nom  E2 back:  positive
+    - [-0.020, 0.045]     # c5  +0.0125 nom  E3 front: weakly positive, flexible
+    - [-0.080, -0.015]    # c6  -0.0544 nom  E3 back:  negative (converging exit)
+    # --- 6 gaps (mm) ---
+    - [1.5, 5.0]          # g0  E1 thickness   (nom 3.26, crown glass)
+    - [3.0, 10.0]         # g1  Air gap E1→E2  (nom 6.01)
+    - [0.5, 2.5]          # g2  E2 thickness   (nom 1.00, flint glass)
+    - [0.5, 4.0]          # g3  Air gap E2→Stop (nom 2.12)
+    - [0.5, 5.0]          # g4  Air gap Stop→E3 (nom 2.75)
+    - [1.0, 5.0]          # g5  E3 thickness   (nom 2.95, crown glass)
+    # --- flange (last surface to sensor, nominal ~42 mm) ---
+    - [15.0, 60.0]        # flange
+
+  stage: stage2
+  num_rays: 256
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: true
+  descriptor_field_index: 1
+
+descriptor:
+  kind: zernike
+  params:
+    noll_indices: [7, 11]
+    num_rays: 256
+
+algorithm:
+  population_size: 18
+  initial_sigma: 0.75
+  cma_eta: 0.05
+  cma_seed: 42
+  seed_count: 5000
+  calibration_count: 5000
+  iterations: 80000
+  new_cell_bonus: 1.0e6
+  log_every: 50
+
+archive:
+  bins: [64, 64]
+  bounds: null
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: cooke_triplet_refined
+  checkpoint_every: 100
+  device: auto

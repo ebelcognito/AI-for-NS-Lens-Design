@@ -1,0 +1,25 @@
+# CODE V export spec : fold_cell_8_14
+# dom_signature      : T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@D -> TIR@A -> T@B
+# descriptor         : TIR=10  spot=19.032  fitness=0.045  effic=0.107
+# units=mm (engine units ~= mm)  wl=587.56 nm  n=2.000000
+# CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X
+#
+OBJECT : infinity (afocal collimated input) ;  field YAN = 36.310029 deg
+STOP   : flat aperture at engine x=0.0  YDE=16.6531 mm  semi-aperture=4.000 mm
+
+ i  role fc   event      type refl    YDE(mm)    ZDE(mm)   ADE(deg)          RDY(mm)           medium_after
+-----------------------------------------------------------------------------------------------------------
+ 1 entry  A refract  CYLINDER    -     0.0000    12.7921    25.0000          62.2589                GLASS n
+ 2  fold  D     tir     PLANE    Y    30.0000    23.6150    90.0000  INFINITY (flat) REFL (stay in glass n)
+ 3  fold  B     tir  CYLINDER    Y     0.0000    68.8139    23.5206         -40.2200 REFL (stay in glass n)
+ 4  fold  B     tir  CYLINDER    Y     0.0000    68.8139    23.5206         -40.2200 REFL (stay in glass n)
+ 5  fold  B     tir  CYLINDER    Y     0.0000    68.8139    23.5206         -40.2200 REFL (stay in glass n)
+ 6  fold  B     tir  CYLINDER    Y     0.0000    68.8139    23.5206         -40.2200 REFL (stay in glass n)
+ 7  fold  B     tir  CYLINDER    Y     0.0000    68.8139    23.5206         -40.2200 REFL (stay in glass n)
+ 8  fold  B     tir  CYLINDER    Y     0.0000    68.8139    23.5206         -40.2200 REFL (stay in glass n)
+ 9  fold  T     tir     PLANE    Y   -30.0000    50.6614    90.0000  INFINITY (flat) REFL (stay in glass n)
+10  fold  D     tir     PLANE    Y    30.0000    23.6150    90.0000  INFINITY (flat) REFL (stay in glass n)
+11  fold  A     tir  CYLINDER    Y     0.0000    12.7921    25.0000          62.2589 REFL (stay in glass n)
+12  exit  B refract  CYLINDER    -     0.0000    68.8139    23.5206         -40.2200                    AIR
+
+IMAGE  : PLANE at engine x=120.0  ZDE=120.0000 mm  (detector plane; refocus in CODE V as desired)

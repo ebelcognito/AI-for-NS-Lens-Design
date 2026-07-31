@@ -1,0 +1,81 @@
+{
+  "id": "fold_cell_2_8",
+  "descriptor": {
+    "tir_count": 2,
+    "thinness_T": 66.7653895203149,
+    "spot": 3.725643513294311,
+    "fitness": 0.959993439399185,
+    "efficiency": 0.9561892423928752
+  },
+  "genotype": {
+    "ray_y": 11.361786415079717,
+    "ang": 10.610368667958479,
+    "cx": 85.0,
+    "thick": 43.391700993100315,
+    "fsag": 1.011579765111507,
+    "bsag": 18.0,
+    "tilt_a": 21.117521009554903,
+    "tilt_b": 21.826311799985316,
+    "n": 1.5
+  },
+  "dom_signature": "T@A -> TIR@D -> TIR@B",
+  "coordinate_map": "CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X",
+  "units": "mm (engine units ~= mm)",
+  "wavelength_nm": 587.56,
+  "refractive_index": 1.5,
+  "object": "infinity (afocal collimated input)",
+  "field_YAN_deg": 10.610368667958479,
+  "stop": {
+    "at_engine_x": 0.0,
+    "YDE_mm": 11.361786,
+    "semi_aperture_mm": 4.0,
+    "note": "reproduces the input beam offset+width"
+  },
+  "image": {
+    "type": "PLANE",
+    "at_engine_x": 120.0,
+    "ZDE_mm": 120.0,
+    "note": "detector plane; refocus in CODE V as desired"
+  },
+  "surfaces": [
+    {
+      "i": 1,
+      "role": "entry",
+      "face": "A",
+      "event": "refract",
+      "type": "CYLINDER",
+      "reflective": false,
+      "YDE_mm": 0.0,
+      "ZDE_mm": 62.29257,
+      "ADE_deg": 21.117521,
+      "RDY_mm": 548.408613,
+      "medium_after": "GLASS n"
+    },
+    {
+      "i": 2,
+      "role": "fold",
+      "face": "D",
+      "event": "tir",
+      "type": "PLANE",
+      "reflective": true,
+      "YDE_mm": 30.0,
+      "ZDE_mm": 73.199147,
+      "ADE_deg": 90.0,
+      "RDY_mm": "INFINITY (flat)",
+      "medium_after": "REFL (stay in glass n)"
+    },
+    {
+      "i": 3,
+      "role": "exit",
+      "face": "B",
+      "event": "tir",
+      "type": "CYLINDER",
+      "reflective": true,
+      "YDE_mm": 0.0,
+      "ZDE_mm": 124.69585,
+      "ADE_deg": 21.826312,
+      "RDY_mm": -38.845763,
+      "medium_after": "REFL (stay in glass n)"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+# ============================================================================
+# Quadruplet — (S2, S4) BC with FOCUSED archive bounds
+# ============================================================================
+# Identical to quadruplet_s2s4.yaml but archive bounds are tightened to the
+# physically meaningful region:
+#   S2 (coma):    [-0.0007,  +0.001]   asymmetric, biased to + coma observed
+#   S4 (Petzval): [ 0.0,     +0.00025] only positive Petzval (typical for
+#                                       positive-power lenses)
+# This concentrates archive resolution where good designs actually live,
+# avoiding wasted cells in the (large negative-Petzval) region of the BC plane
+# that doesn't correspond to viable designs.
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/quadruplet_50mm_f4.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.486, 0.587, 0.656]
+  object_depth_mm: -20000.0
+  stop_surface_index: 4
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 5, 6, 7, 8]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5, 6, 7]
+  variable_flange: true
+  variable_materials: true
+  free_material_indices: [0, 1, 2, 3]
+
+  theta_bounds:
+    # 8 curvatures
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    - [-0.08, 0.08]
+    # 8 gaps
+    - [0.8, 3.2]
+    - [0.5, 10.0]
+    - [0.8, 3.2]
+    - [0.5, 10.0]
+    - [0.5, 10.0]
+    - [0.8, 3.2]
+    - [0.5, 10.0]
+    - [0.8, 3.2]
+    # flange
+    - [30.0, 60.0]
+    # 4 × (n, V)
+    - [1.45, 1.85]      # n_0
+    - [25, 75]          # V_0
+    - [1.45, 1.85]      # n_1
+    - [25, 75]          # V_1
+    - [1.45, 1.85]      # n_2
+    - [25, 75]          # V_2
+    - [1.45, 1.85]      # n_3
+    - [25, 75]          # V_3
+
+  stage: stage2
+  num_rays: 128
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 2
+
+descriptor:
+  kind: seidel
+  params:
+    terms: ["S2", "S4"]
+
+algorithm:
+  population_size: 18
+  initial_sigma: 0.5
+  cma_eta: 0.1
+  cma_seed: 42
+  seed_count: 500
+  calibration_count: 500
+  iterations: 200000
+  new_cell_bonus: 1.0e6
+  log_every: 50
+  restart_patience: 2
+
+archive:
+  bins: [256, 256]
+  bounds:
+    - [-0.0007, 0.001]      # S2 (coma): asymmetric range
+    - [0.0,     0.00025]    # S4 (Petzval): only positive
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: quadruplet_s2s4_focused
+  checkpoint_every: 100
+  device: auto
+  elite_fitness_threshold: -0.2
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 0.0001
+  refine_stability_samples: 30
+  refine_stability_perturbation: 0.005

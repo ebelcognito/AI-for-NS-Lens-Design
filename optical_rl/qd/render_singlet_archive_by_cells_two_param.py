@@ -1,0 +1,185 @@
+"""Render a 1×N grid of two-param singlet designs picked by archive cell.
+
+Default cells are the three individuals hardcoded below:
+
+  cell [49, 459]  fitness=-6.3606   theta=[0.00, 0.00]
+  cell [24, 454]  fitness=-0.0192   theta=[0.0662, -0.0030]
+  cell [24, 434]  fitness=-0.0099   theta=[0.1000, -0.0204]
+
+Usage
+-----
+  python3 optical_rl/qd/render_singlet_archive_by_cells_two_param.py
+  python3 optical_rl/qd/render_singlet_archive_by_cells_two_param.py \\
+      --archive path/to/archive.json --cell 49,459 --cell 24,454 --cell 24,434
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from optical_rl.qd.render_singlet_archive_designs import (  # noqa: E402
+    ArchiveDesign,
+    _parse_fov_fracs,
+    load_archive,
+    resolve_theme,
+)
+from optical_rl.qd.render_singlet_archive_designs_two_param import (  # noqa: E402
+    _default_lens_template,
+    _find_latest_archive,
+    render_archive_grid_two_param,
+)
+
+# ── The three individuals from the 20260330_123603 run ────────────────────────
+DEFAULT_CELLS: list[tuple[int, int]] = [
+    (495, 291),
+    (24, 454),
+    (24, 434),
+]
+
+
+def _parse_cell(spec: str) -> tuple[int, int]:
+    parts = spec.replace(" ", "").split(",")
+    if len(parts) != 2:
+        raise argparse.ArgumentTypeError(f"Expected R,C got {spec!r}")
+    return int(parts[0]), int(parts[1])
+
+
+def _find_design(designs: list[ArchiveDesign], cell: tuple[int, int]) -> ArchiveDesign | None:
+    for d in designs:
+        if d.cell == cell:
+            return d
+    return None
+
+
+def _print_individual(rank: int, d: ArchiveDesign) -> None:
+    theta = np.asarray(d.theta, dtype=np.float64).reshape(-1)
+    c1 = float(theta[0]) if len(theta) > 0 else float("nan")
+    c2 = float(theta[1]) if len(theta) > 1 else float("nan")
+    spot = d.rms_spot if d.rms_spot is not None else float("nan")
+    print(
+        f"[render-cells-2p] rendering #{rank+1}  cell={list(d.cell)}"
+        f"  fitness={d.fitness:.6f}"
+        f"  measures=[{d.measures[0]:.8f}, {d.measures[1]:.8e}]"
+        f"  theta=[{c1:.8f}, {c2:.8f}]"
+        f"  rms_spot={spot:.6f}",
+        flush=True,
+    )
+
+
+def main(argv: list[str] | None = None) -> None:
+    p = argparse.ArgumentParser(
+        description="Render two-param singlet lens designs for specific archive cells."
+    )
+    p.add_argument(
+        "--archive",
+        default=None,
+        help="archive.json (default: latest singlet_cmamega_two_param run)",
+    )
+    p.add_argument("--lens-template", default=str(_default_lens_template()))
+    p.add_argument(
+        "--cell",
+        action="append",
+        dest="cells",
+        type=_parse_cell,
+        default=None,
+        metavar="R,C",
+        help=(
+            "Archive cell row,col to render; repeat once per panel, left-to-right "
+            "(default: the three hardcoded example cells)"
+        ),
+    )
+    p.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="Output PNG (default: <run_dir>/renders_picked_cells_2p.png)",
+    )
+    p.add_argument("--depth-mm", type=float, default=-1000.0)
+    p.add_argument("--wavelength-um", type=float, default=0.587)
+    p.add_argument("--num-rays", type=int, default=11)
+    p.add_argument("--fov-fracs", default="0.0,0.5,0.9")
+    p.add_argument("--dpi", type=int, default=220)
+    p.add_argument("--device", default="cpu")
+    p.add_argument("--use-default-theme", action="store_true")
+    p.add_argument("--bg-color", default="#F8F5E9")
+    p.add_argument("--lens-fill-color", default="#9DC08B")
+    p.add_argument("--lens-outline-color", default="#3A7D44")
+    p.add_argument("--ray-color", default="#DF6D14")
+    args = p.parse_args(argv)
+
+    cells = args.cells if args.cells else list(DEFAULT_CELLS)
+    archive_path = Path(args.archive) if args.archive else _find_latest_archive()
+    lens_template = Path(args.lens_template)
+    out_path = (
+        args.out
+        if args.out
+        else archive_path.resolve().parent / "renders_picked_cells_2p.png"
+    )
+
+    print(f"[render-cells-2p] archive  : {archive_path}", flush=True)
+    print(f"[render-cells-2p] template : {lens_template}", flush=True)
+    print(f"[render-cells-2p] cells    : {cells}", flush=True)
+    print(f"[render-cells-2p] output   : {out_path}", flush=True)
+
+    designs = load_archive(archive_path)
+
+    selected: list[ArchiveDesign] = []
+    for cell in cells:
+        d = _find_design(designs, cell)
+        if d is None:
+            sys.exit(f"[render-cells-2p] ERROR: no archive entry with cell {list(cell)} in {archive_path}")
+        selected.append(d)
+
+    # Print info for every selected individual before rendering begins
+    for rank, d in enumerate(selected):
+        _print_individual(rank, d)
+
+    # Build per-panel titles (c1, c2, spot, fitness)
+    titles: list[str] = []
+    for d in selected:
+        theta = np.asarray(d.theta, dtype=np.float64).reshape(-1)
+        c1 = float(theta[0]) if len(theta) > 0 else float("nan")
+        c2 = float(theta[1]) if len(theta) > 1 else float("nan")
+        spot = d.rms_spot if d.rms_spot is not None else float("nan")
+        titles.append(
+            f"cell {d.cell[0]},{d.cell[1]}\n"
+            f"c1={c1:.4f}  c2={c2:.4f}\n"
+            f"spot={spot:.4f} mm  fit={d.fitness:.4f}"
+        )
+
+    theme = resolve_theme(
+        use_default_theme=bool(args.use_default_theme),
+        bg_color=str(args.bg_color),
+        lens_fill_color=str(args.lens_fill_color),
+        lens_outline_color=str(args.lens_outline_color),
+        ray_color=str(args.ray_color),
+    )
+    fov_fracs = _parse_fov_fracs(str(args.fov_fracs))
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    render_archive_grid_two_param(
+        selected=selected,
+        lens_template=lens_template,
+        theme=theme,
+        out_path=out_path,
+        depth_mm=float(args.depth_mm),
+        wavelength_um=float(args.wavelength_um),
+        num_rays=int(args.num_rays),
+        fov_fracs=fov_fracs,
+        cols=len(selected),
+        dpi=int(args.dpi),
+        device=str(args.device),
+        panel_titles=titles,
+    )
+    print(f"[render-cells-2p] saved {out_path}", flush=True)
+
+
+if __name__ == "__main__":
+    main()

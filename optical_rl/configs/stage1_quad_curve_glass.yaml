@@ -1,0 +1,60 @@
+env:
+  world_width: 300
+  world_height: 300
+  source_x: 10
+  source_y: 150
+  detector_x: 290
+  detector_center_y: 150
+  detector_height: 5
+  ray1_target_x: 290
+  ray1_target_y: 200
+  ray2_target_x: 290
+  ray2_target_y: 100
+  ray3_target_x: 290
+  ray3_target_y: 250
+  ray4_target_x: 290
+  ray4_target_y: 50
+  ref_index: 1.5
+  action_scale_xy: 5.0
+  action_scale_sag: 0.05
+  max_steps: 250
+  max_initial_power: 0.0
+  max_reset_attempts: 100
+  reset_jitter_xy: 20.0
+  reset_jitter_sag: 0.1
+  center_x: 150.0
+  center_y: 150.0
+  quadrant_margin: 5.0
+  right_side_x_max: 270.0
+  sag_min: -0.35
+  sag_max: 0.35
+
+training:
+  algorithm: PPO
+  device: cpu
+  learning_rate: 0.0001
+  n_steps: 1024
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  ent_coef: 0.0
+  total_timesteps: 1500000
+  use_persistent_runner: true
+
+callbacks:
+  eval_freq: 4096
+  checkpoint_freq: 20480
+  progress_freq: 10000
+  n_eval_episodes: 5
+  eval_verbose: 0
+
+logging:
+  results_dir: results
+  logs_dir: results/logs
+  models_dir: results/models
+  tensorboard_dir: results/tensorboard
+  visualizations_dir: results/visualizations
+
+debug:
+  verbose_timing: false
+  timing_log_interval: 5000

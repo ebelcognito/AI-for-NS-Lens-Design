@@ -1,0 +1,107 @@
+# ============================================================================
+# Quadruplet — Tessar-style cementing experiment
+# ============================================================================
+# Identical to quadruplet_s2s4.yaml except:
+#   1. Descriptor reverts to (S2, S3) — coma vs astigmatism, the standard
+#      well-corrected diagnostic; (S2, S4) was a previous experiment.
+#   2. Air gap g6 (between E3-back and E4-front) is constrained to [0.05, 0.3] mm,
+#      forcing a Tessar-like cemented-doublet on the back pair: with such a
+#      tiny gap, mismatched curvatures across it would refract rays twice and
+#      pay an aberration cost, so the optimizer is incentivised to match
+#      curvatures across the cement (= true cementing approximation).
+#   3. Materials remain variable across all four elements so glass spread
+#      (e.g. dense flint + dense crown for the doublet) can be discovered.
+
+problem:
+  kind: lens
+  lens_path: /home/hisham26/Desktop/RL/DeepLens/datasets/lenses/quadruplet_50mm_f4.json
+  wavelength_um: 0.587
+  fitness_wavelengths_um: [0.486, 0.587, 0.656]
+  object_depth_mm: -20000.0
+  stop_surface_index: 4
+  parameterization: full_dof
+
+  free_curvature_indices: [0, 1, 2, 3, 5, 6, 7, 8]
+  derived_curvature_index: null
+  focal_length_target_mm: 50.0
+  efl_penalty_weight: 10.0
+
+  free_gap_indices: [0, 1, 2, 3, 4, 5, 6, 7]
+  variable_flange: true
+  variable_materials: true
+  free_material_indices: [0, 1, 2, 3]
+
+  theta_bounds:
+    # 8 curvatures
+    - [-0.08, 0.08]      # c0   E1 front
+    - [-0.08, 0.08]      # c1   E1 back
+    - [-0.08, 0.08]      # c2   E2 front
+    - [-0.08, 0.08]      # c3   E2 back
+    - [-0.08, 0.08]      # c5   E3 front (doublet front element front)
+    - [-0.08, 0.08]      # c6   E3 back  (doublet cement, front side)
+    - [-0.08, 0.08]      # c7   E4 front (doublet cement, back side)
+    - [-0.08, 0.08]      # c8   E4 back
+    # 8 gaps
+    - [0.8, 3.2]         # g0   E1 thickness
+    - [0.5, 10.0]        # g1   air E1→E2
+    - [0.8, 3.2]         # g2   E2 thickness
+    - [0.5, 10.0]        # g3   air E2→stop
+    - [0.5, 10.0]        # g4   air stop→E3 (front of doublet)
+    - [0.8, 3.2]         # g5   E3 thickness (front element of cemented doublet)
+    - [0.05, 0.3]        # g6   <<< CEMENT GAP — narrow window, Tessar-style
+    - [0.8, 3.2]         # g7   E4 thickness (back element of cemented doublet)
+    # flange
+    - [30.0, 60.0]
+    # 4 × (n, V) — variable per element
+    - [1.45, 1.85]      # n_0
+    - [25, 75]          # V_0
+    - [1.45, 1.85]      # n_1
+    - [25, 75]          # V_1
+    - [1.45, 1.85]      # n_2  (doublet front-half glass)
+    - [25, 75]          # V_2
+    - [1.45, 1.85]      # n_3  (doublet back-half glass)
+    - [25, 75]          # V_3
+
+  stage: stage2
+  num_rays: 128
+  invalid_tol: 0.2
+  invalid_penalty_weight: 5.0
+  intersect_penalty_weight: 1.0
+  air_min_mm: 0.1                # leaves cement-gap above the air-min threshold
+  thick_min_mm: 0.5
+  strict_entrance_pupil: false
+  descriptor_field_index: 2
+
+descriptor:
+  kind: seidel
+  params:
+    terms: ["S2", "S3"]
+
+algorithm:
+  population_size: 18
+  initial_sigma: 0.5
+  cma_eta: 0.1
+  cma_seed: 42
+  seed_count: 500
+  calibration_count: 500
+  iterations: 200000
+  new_cell_bonus: 1.0e6
+  log_every: 50
+  restart_patience: 2
+
+archive:
+  bins: [256, 256]
+  bounds: [[-0.001, 0.001], [-0.001, 0.001]]
+  bound_calibration_pad: 0.05
+
+io:
+  results_dir: results/lensmega
+  run_name: quadruplet_tessar_s2s3
+  checkpoint_every: 100
+  device: auto
+  elite_fitness_threshold: -0.4
+  refine_lbfgs_max_steps: 100
+  refine_lbfgs_lr: 0.5
+  refine_converge_tol: 0.0001
+  refine_stability_samples: 30
+  refine_stability_perturbation: 0.005

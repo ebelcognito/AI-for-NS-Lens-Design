@@ -1,0 +1,26 @@
+# CODE V export spec : fold_cell_8_9
+# dom_signature      : T@A -> TIR@D -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@B -> TIR@T -> TIR@A -> T@B
+# descriptor         : TIR=11  spot=25.451  fitness=0.128  effic=0.288
+# units=mm (engine units ~= mm)  wl=587.56 nm  n=1.500000
+# CODEV Z=engine_x (axis), Y=engine_y, X=out-of-plane; cylinders along X
+#
+OBJECT : infinity (afocal collimated input) ;  field YAN = 16.693760 deg
+STOP   : flat aperture at engine x=0.0  YDE=2.5764 mm  semi-aperture=4.000 mm
+
+ i  role fc   event      type refl    YDE(mm)    ZDE(mm)   ADE(deg)          RDY(mm)           medium_after
+-----------------------------------------------------------------------------------------------------------
+ 1 entry  A refract  CYLINDER    -     0.0000    62.6398    13.3206         -67.7950                GLASS n
+ 2  fold  D     tir     PLANE    Y    30.0000    68.1750    90.0000  INFINITY (flat) REFL (stay in glass n)
+ 3  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+ 4  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+ 5  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+ 6  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+ 7  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+ 8  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+ 9  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+10  fold  B     tir  CYLINDER    Y     0.0000   111.7977    10.7473         -35.3530 REFL (stay in glass n)
+11  fold  T     tir     PLANE    Y   -30.0000    80.9723    90.0000  INFINITY (flat) REFL (stay in glass n)
+12  fold  A     tir  CYLINDER    Y     0.0000    62.6398    13.3206         -67.7950 REFL (stay in glass n)
+13  exit  B refract  CYLINDER    -     0.0000   111.7977    10.7473         -35.3530                    AIR
+
+IMAGE  : PLANE at engine x=120.0  ZDE=120.0000 mm  (detector plane; refocus in CODE V as desired)
