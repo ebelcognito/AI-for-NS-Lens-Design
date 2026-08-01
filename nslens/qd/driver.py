@@ -40,8 +40,8 @@ class ExperimentConfig:
     problem: Problem
     fitness: str = "focused_throughput"
     descriptors: Sequence[str] = ("tir_bounces", "thinness")
-    bc_bins: Sequence[int] = (9, 16)
-    bc_bounds: Sequence[Sequence[float]] = ((0.0, 9.0), (10.0, 120.0))
+    bc_bins: Optional[Sequence[int]] = None       # None -> take from the descriptors
+    bc_bounds: Optional[Sequence[Sequence[float]]] = None
     evals: int = 14000
     seed: int = 0
     emitters: int = 5
@@ -50,16 +50,34 @@ class ExperimentConfig:
     lock_tilt: bool = False
     fields: Optional[Sequence[float]] = None      # multifield: aggregate over these
     label: str = ""                                # meta.experiment string
+    #: descriptors measured for every design and written to info, beyond the two axes
+    info_descriptors: Sequence[str] = ()
+    #: per-cell key names for the two behaviour coordinates
+    cell_bc_keys: Sequence[str] = ("tir_count", "T")
+    #: extra key/values merged into archive.json meta
+    meta_extra: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         fitness_registry.get(self.fitness)
-        for d in self.descriptors:
+        for d in tuple(self.descriptors) + tuple(self.info_descriptors):
             descriptor_registry.get(d)
+        # an axis inherits the binning it was calibrated with unless overridden
+        specs = [descriptor_registry.spec(d) for d in self.descriptors]
+        if self.bc_bins is None:
+            self.bc_bins = tuple(s[0] for s in specs)
+        if self.bc_bounds is None:
+            self.bc_bounds = tuple(s[1] for s in specs)
         if not self.label:
             self.label = self.name
 
+    @property
+    def with_robust(self) -> bool:
+        """robustness is expensive, so it is only measured when it is an axis."""
+        return any(descriptor_registry.get(d) is descriptor_registry.get("robustness")
+                   for d in self.descriptors)
 
-def _evaluate(runner, problem, cfg, x) -> Optional[dict]:
+
+def _evaluate(runner, problem, cfg, x, pert_rng=None) -> Optional[dict]:
     """Genotype -> {fitness, bc, info}, or None if unusable."""
     p = problem.vec_to_params(x)
     if not problem.is_valid(p):
@@ -101,7 +119,20 @@ def _evaluate(runner, problem, cfg, x) -> Optional[dict]:
         fitness = float(fit_fn(obs, focus_w=problem.focus_w))
         extra = {}
 
-    bc = tuple(float(descriptor_registry.get(d)(obs, problem)) for d in cfg.descriptors)
+    ctx = descriptor_registry.DescriptorContext(
+        obs=obs, problem=problem, params=p, genotype=np.asarray(x, float),
+        fitness=float(fitness), runner=runner, pert_rng=pert_rng,
+        with_robust=cfg.with_robust)
+
+    # measured once, reused for both the axes and the info block
+    measured = {}
+    for d in tuple(cfg.descriptors) + tuple(cfg.info_descriptors):
+        fn = descriptor_registry.get(d)
+        if fn.descriptor_name not in measured:
+            measured[fn.descriptor_name] = float(fn(ctx))
+
+    bc = tuple(measured[descriptor_registry.get(d).descriptor_name]
+               for d in cfg.descriptors)
     info = dict(
         fitness=float(fitness),
         efficiency=float(obs.delivered) / obs.emitted,
@@ -114,6 +145,10 @@ def _evaluate(runner, problem, cfg, x) -> Optional[dict]:
         n_forward=len(obs.records),
         n_dom=obs.n_dominant,
     )
+    # extra descriptors land in info under their own names; tir_bounces and thinness
+    # are already reported as tir_count / thinness_T
+    info.update({k: v for k, v in measured.items()
+                 if k not in ("tir_bounces", "thinness")})
     info.update(extra)
     return dict(fitness=float(fitness), bc=bc, info=info)
 
@@ -127,6 +162,9 @@ def run(cfg: ExperimentConfig, out_dir: Path, *, log=print) -> dict:
 
     archive = GridArchive(tuple(cfg.bc_bins), tuple(tuple(b) for b in cfg.bc_bounds))
     rng = np.random.default_rng(cfg.seed)
+    # separate stream so that turning the robustness descriptor on does not perturb the
+    # search RNG and silently move every other experiment's archive
+    pert_rng = np.random.default_rng(cfg.seed + 9999)
     scale = hi - lo
     t0 = time.time()
 
@@ -136,6 +174,14 @@ def run(cfg: ExperimentConfig, out_dir: Path, *, log=print) -> dict:
             x0 = rng.uniform(lo, hi)
         return CMAES(np.asarray(x0, float), cfg.sigma0 * float(np.mean(scale)),
                      popsize=cfg.popsize, seed=s, bounds=(lo, hi))
+
+    # A Problem may own its measurement model (the AR/VR relay does); everything else
+    # -- loop, RNG protocol, archive, ranking keys, payload -- stays shared.
+    if hasattr(problem, "evaluate"):
+        evaluate_fn = lambda r, pr, c, xx, pert_rng=None: problem.evaluate(  # noqa: E731
+            r, c, xx, pert_rng=pert_rng)
+    else:
+        evaluate_fn = _evaluate
 
     n = 0
     n_invalid = 0
@@ -153,7 +199,7 @@ def run(cfg: ExperimentConfig, out_dir: Path, *, log=print) -> dict:
                 for k, xx in enumerate(X):
                     if cfg.lock_tilt:
                         xx = lock_tilt(xx)
-                    ev = _evaluate(runner, problem, cfg, xx)
+                    ev = evaluate_fn(runner, problem, cfg, xx, pert_rng=pert_rng)
                     n += 1
                     if ev is None:
                         keys[k] = -1e9
@@ -178,23 +224,26 @@ def run(cfg: ExperimentConfig, out_dir: Path, *, log=print) -> dict:
                     f"cov={rec['coverage']*100:5.1f}% best={rec['best']:.3f} "
                     f"invalid={n_invalid} ({time.time()-t0:6.1f}s)")
 
+    k0, k1 = cfg.cell_bc_keys
     cells = []
     for (i0, i1), c in archive.cells.items():
-        rec = dict(i0=int(i0), i1=int(i1), tir_count=float(c.bc[0]), T=float(c.bc[1]),
-                   fitness=float(c.fitness), genotype=[float(v) for v in c.genotype])
+        rec = {"i0": int(i0), "i1": int(i1),
+               k0: float(c.bc[0]), k1: float(c.bc[1]),
+               "fitness": float(c.fitness),
+               "genotype": [float(v) for v in c.genotype]}
         rec.update(c.info)
         cells.append(rec)
 
-    payload = dict(
-        meta=dict(experiment=cfg.label, evals=int(n), seed=int(cfg.seed),
-                  invalid=int(n_invalid), bc_bins=list(cfg.bc_bins),
-                  bc_bounds=[list(b) for b in cfg.bc_bounds],
-                  bc_axes=[descriptor_registry.axis_label(d) for d in cfg.descriptors],
-                  fitness=fitness_registry.META_DESCRIPTION.get(cfg.fitness, cfg.fitness),
-                  focus_w=problem.focus_w,
-                  param_names=list(problem.param_names),
-                  wall_seconds=float(time.time() - t0)),
-        history=history, cells=cells)
+    meta = dict(experiment=cfg.label, evals=int(n), seed=int(cfg.seed),
+                invalid=int(n_invalid), bc_bins=list(cfg.bc_bins),
+                bc_bounds=[list(b) for b in cfg.bc_bounds],
+                bc_axes=[descriptor_registry.axis_label(d) for d in cfg.descriptors],
+                fitness=fitness_registry.META_DESCRIPTION.get(cfg.fitness, cfg.fitness),
+                focus_w=problem.focus_w,
+                param_names=list(problem.param_names),
+                wall_seconds=float(time.time() - t0))
+    meta.update(cfg.meta_extra)
+    payload = dict(meta=meta, history=history, cells=cells)
     (out_dir / "archive.json").write_text(json.dumps(payload, indent=2))
     log(f"[{cfg.name}] wrote {out_dir/'archive.json'} ({len(cells)} cells, {n} evals, "
         f"{payload['meta']['wall_seconds']:.0f}s)")

@@ -24,6 +24,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 
+_DESC = "ns_probe/run_fold_qd_descriptors.py"
+
 # name -> (legacy argv, nslens experiment name)
 CASES = {
     "fold_qd": (["ns_probe/run_fold_qd.py"], "fold_qd"),
@@ -31,6 +33,18 @@ CASES = {
     "orderly_qd": (["ns_probe/run_orderly_qd.py"], "orderly_qd"),
     "prism_fold_qd": (["ns_probe/run_prism_fold_qd.py"], "prism_fold_qd"),
     "multifield_qd": (["ns_probe/run_multifield_qd.py"], "multifield_qd"),
+    # doc 12 descriptor ablation: one case per BC1 axis, plus a crossed grid.
+    # `robust` is the expensive one -- it re-evaluates each design 3x under jitter,
+    # so it also exercises the separate perturbation RNG stream (seed + 9999).
+    "desc_baseline": ([_DESC, "--bc", "baseline"], "desc_baseline"),
+    "desc_nsfrac": ([_DESC, "--bc", "nsfrac"], "desc_nsfrac"),
+    "desc_tilt": ([_DESC, "--bc", "tilt"], "desc_tilt"),
+    "desc_critmargin": ([_DESC, "--bc", "critmargin"], "desc_critmargin"),
+    "desc_locus": ([_DESC, "--bc", "locus"], "desc_locus"),
+    "desc_robust": ([_DESC, "--bc", "robust"], "desc_robust"),
+    "desc_cross": ([_DESC, "--bc", "baseline", "--bc2", "locus"],
+                   "desc_baseline_x_locus"),
+    "arvr_qd": (["ns_probe/run_arvr_qd.py"], "arvr_qd"),
 }
 
 # fields every legacy runner writes per cell (multifield writes its own extras)

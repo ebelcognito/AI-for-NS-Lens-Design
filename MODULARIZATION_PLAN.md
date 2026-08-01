@@ -213,14 +213,43 @@ the test, not by review — which is the argument for the test:
    dominant signature. Getting this wrong changed the invalid count (42 vs 48) while
    leaving every cell identical — the kind of silent drift only a cell-for-cell diff catches.
 
+### Descriptor ablation and AR/VR (also done)
+
+`run_fold_qd_descriptors.py` — the largest script in `ns_probe` at 309 lines — is now a
+*parameterised* config covering every axis it supported:
+
+```
+python -m nslens.qd desc_locus
+python -m nslens.qd desc_baseline_x_locus
+```
+
+Axes: `baseline`, `nsfrac`, `tilt`, `critmargin`, `locus`, `robust`, `thinness`, for
+either grid axis. Each descriptor now carries its own calibrated `(bins, bounds, label)`
+in the registry, replacing the parallel `BC1` dict the script had to keep in sync by
+hand. Verified identical on 7 axis combinations.
+
+`run_arvr_qd.py` — the AR/VR 3-field relay — keeps its own measurement model. Its fitness
+is not focused throughput (it scores three display sources reaching the eyebox as well
+collimated, correctly ordered beams) and its axes are FOV and prism depth. Forcing it
+through `Observation` would have been the wrong abstraction, so `ArvrProblem` supplies
+its own `evaluate` and reuses the loop, RNG protocol, archive and payload. 69 cells
+identical.
+
+### Two more constants the test caught
+
+4. `ns_frac` is summed in a specific order — numpy's **pairwise** sum for the
+   denominator, a **sequential** Python loop for the numerator. Using one method for
+   both differed in the last 1–2 ULP, which matters because the value is *binned*.
+5. `arvr_qd` runs **8 emitters and 40k evals**, not the 5/14k of the fold envs. Every
+   individual evaluation was already identical; the emitter count alone moved the whole
+   archive.
+
 ### Remaining in phase 2
 
-- `run_fold_qd_descriptors.py` (doc 12 ablation) — needs the descriptor registry
-  extended with the locus / tilt / nsfrac / critmargin / robust axes.
-- `run_arvr_qd.py` — needs an `ArvrProblem` (PointFan source, `arvr_metrics`).
-- `run.py` / `run_single.py` (#1, #2, #10) — the phase-0 probe env, a different
-  genome (per-face reflectivity) and archive; lowest priority, but the experiments
-  are cited so the configs must exist before the scripts go.
+- `run.py` / `run_single.py` (#1, #2, #10) — the phase-0 probe env. A different genome
+  (per-face reflectivity, a doublet variant) and a different archive. The experiments are
+  cited — including two negative results the record depends on — so the configs must
+  exist before the scripts can go.
 - Then the legacy runners become shims, and phase 4 deletes them.
 
 ## Phase 3 — analyze / render / export

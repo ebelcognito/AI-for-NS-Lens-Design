@@ -49,9 +49,19 @@ def coherent_focused_throughput(obs: Observation, *, focus_w: float) -> float:
     return obs.window_energy(focus_w, dominant_only=True) / obs.emitted
 
 
+@register("arvr_relay_3field")
+def arvr_relay_3field(obs: Observation, *, focus_w: float) -> float:
+    """Placeholder: the AR/VR relay fitness needs the raw engine result (three sources
+    attributed by emission x, angular spread at the eyebox, field ordering), not an
+    Observation. ArvrProblem.evaluate computes it; this exists so the config can name it."""
+    raise NotImplementedError(
+        "arvr_relay_3field is computed by ArvrProblem.evaluate, not the shared evaluator")
+
+
 #: human-readable strings written into archive.json meta, kept identical to the legacy
 #: runners so old and new archives compare cleanly
 META_DESCRIPTION = {
+    "arvr_relay_3field": "well_collimated_throughput_3field",
     "focused_throughput": "focused_throughput (window energy / emitted)",
     "coherent_focused_throughput":
         "coherent_focused_throughput (dominant-signature window energy / emitted)",

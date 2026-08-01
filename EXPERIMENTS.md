@@ -92,9 +92,14 @@ Phase 2 replaces runner scripts with configs. A config is only allowed to land a
 | #6 orderly | `python -m nslens.qd orderly_qd` | `run_orderly_qd.py` |
 | #8 multifield | `python -m nslens.qd multifield_qd` | `run_multifield_qd.py` |
 | prism fold | `python -m nslens.qd prism_fold_qd` | `run_prism_fold_qd.py` |
-| doc 12 ablation | — not yet | `run_fold_qd_descriptors.py` |
-| AR/VR | — not yet | `run_arvr_qd.py` |
+| doc 12 ablation | `python -m nslens.qd desc_<axis>[_x_<axis2>]` | `run_fold_qd_descriptors.py` |
+| AR/VR | `python -m nslens.qd arvr_qd` | `run_arvr_qd.py` |
 | #1, #2, #10 phase-0 | — not yet | `run.py`, `run_single.py` |
+
+The ablation axes are `baseline`, `nsfrac`, `tilt`, `critmargin`, `locus`, `robust`,
+`thinness` — any of them for either grid axis, e.g. `desc_locus`,
+`desc_baseline_x_locus`. Each axis carries its own calibrated binning in the descriptor
+registry, so naming an axis is enough.
 
 ## What this means for the refactor
 
