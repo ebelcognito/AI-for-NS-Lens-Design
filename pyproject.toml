@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nslens"
+version = "0.1.0"
+description = "Non-sequential lens design: parametric elements, QD search, differentiable refinement"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "scikit-learn>=1.3",
+]
+
+# torch is optional: only ns_autodiff / nslens.refine need it, and the CUDA build
+# should be chosen deliberately rather than resolved by a solver.
+#   pip install -e ".[autodiff]"
+[project.optional-dependencies]
+autodiff = ["torch>=2.5"]
+
+[tool.setuptools.packages.find]
+include = ["nslens*"]
+
+# ---------------------------------------------------------------------------
+# Environment note
+#
+# This project has been run with /home/hisham26/Desktop/simu1/deeplens_env, a venv
+# whose name is a leftover from an unrelated project -- there is no "deeplens"
+# package anywhere in this repo, only ~10 docstrings quoting that interpreter path.
+# It is, however, the only interpreter here with torch (2.5.1+cu121), so it cannot
+# simply be deleted.
+#
+# To retire the name:
+#   python3.12 -m venv .venv && . .venv/bin/activate
+#   pip install -e ".[autodiff]"
+# then update the `PY=` lines in the remaining script docstrings.
+#
+# The engine also needs Node.js and ray-optics' deps:
+#   cd ray-optics && npm ci
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
