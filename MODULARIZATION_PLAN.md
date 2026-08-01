@@ -1,6 +1,8 @@
 # Modularization plan
 
-Status as of 2026-08-01. Phase 0 is **done**; phases 1-4 are proposed.
+Status as of 2026-08-01. Phases **0, 0b and 1 are done**; phases 2-4 remain.
+
+Gate for every commit: `python tests/run_all.py` (currently **5/5**).
 
 ## The finding that drives everything
 
@@ -95,7 +97,49 @@ The pin independently reproduces both documented ground truths: the DEMO wedge's
 > (2.5.1+cu121), which all 24 torch files in `ns_autodiff` need. Deleting it would break
 > the autodiff half. The real fix is phase 1's `pyproject.toml`, which retires the name.
 
-## Phase 1 — the core (`nslens/`)
+## Phase 0b — legacy `optical_rl` (DONE)
+
+Deleted the stage-1 RL tree (`envs/`, `tests/`, `experiments/`, `configs/`,
+`rebuttal_baselines_export/`, 10 `main_stage1_*.py`, `utils/scene_builder.py`).
+`optical_rl` is now only the two ray-optics bridges plus the three helpers
+`utils/__init__` imports. **265 -> 120 Python files.**
+
+## Phase 1 — the core (`nslens/`) — DONE
+
+Built and proven equivalent:
+
+```
+nslens/
+  geometry/  shapes.py (Flat | Arc | Freeform), element.py (Body/Face/Element)
+  scene/     sources.py (ParallelBundle | PointFan), layout.py (Detector/CropBox/Layout)
+  engine/    runner.py (seam for the ray-optics process), signatures.py (moved here)
+```
+
+Equivalence is proven with **exact float equality**, not tolerance:
+
+| check | result |
+|---|---|
+| `fold_demo.element` | 2000 genotypes exact (+ DEMO champion with coating) |
+| `arvr_prism.prism_element` | 2000 genotypes exact |
+| `geometry_valid` | 2000 agree (233 rejected by both) |
+| `element_x_extent` | 2000 agree |
+| `fold_demo.scene` / `prism_fold.scene` / `scene_arvr` | 500 scenes each, exact |
+
+**Face-label trap, now fixed in one place.** The authoritative classifier maps
+`y <= -half_h -> 'T'` and `y >= +half_h -> 'D'`, so **`T` is the BOTTOM edge and `D` is
+the TOP**. `arvr_prism`'s docstring says the opposite and is wrong; `element_torch`'s
+comment is right. The legacy sag names are crossed too: `dsag` lands on the bottom
+(face `T`), `tsag` on the top (face `D`). `nslens` uses `left/right/bottom/top`
+internally and pins the mapping in `LEGACY_FACE_LABEL`. Signatures still read
+`A/B/T/D` so existing archives stay comparable. (Note the overload: in `T@A -> TIR@D`
+the token before `@` is the *event*, after it the *face* — `T` means transmit on the
+left and bottom-edge on the right.)
+
+Remaining phase-1 tail, not yet done: `to_torch()` on `Element`, so `ns_autodiff` stops
+re-deriving the same geometry. That is the prerequisite for folding `element_torch`,
+`element_arvr` and `element_freeform` into the one object.
+
+## Phase 1 (original sketch, for reference)
 
 ```
 nslens/
@@ -140,13 +184,22 @@ paths at `runs/`, then delete the compat symlinks.
 Once configs cover every recorded experiment, shims go. Expected endpoint: **~35-45
 source files**, from 265.
 
-## Open decisions
+## Resolved
 
-1. **Repo location.** `NS_lensdesign` is not a git repo; GitHub is a hand-synced copy at
-   `~/Desktop/AI-for-NS-Lens-Design`. That is a second duplication problem layered on
-   this one and it will fight every phase. Recommend making `NS_lensdesign` itself the
-   repo. Not yet done.
-2. **Remaining `optical_rl` legacy** — `main_stage1_*.py` (10), `envs/`, `tests/`,
-   `experiments/`, `configs/`, `rebuttal_baselines_export/`. Nothing in current work
-   imports them; only `utils/` is needed. Not deleted — awaiting your call, since these
-   were not named in the removal request.
+1. **Repo location** — done. `NS_lensdesign` is now the repository, continuing the
+   history and `origin` remote of the former hand-synced copy at
+   `~/Desktop/AI-for-NS-Lens-Design` (which is now redundant and can be deleted once a
+   push succeeds). `ray-optics/.git` was renamed to `.git-upstream` so the parent tracks
+   the vendored engine as real files rather than a gitlink — without that, the
+   uncommitted engine mods including `runner_persistent.js` would not have been tracked.
+2. **Remaining `optical_rl` legacy** — deleted in phase 0b.
+
+## Outstanding
+
+- **`optical_rl/pat.txt` holds a live GitHub PAT** (`ghp_`, classic, 40 chars), on disk
+  since 2026-07-01 and previously caught by push protection. It is gitignored and was
+  never committed, but plaintext-on-disk plus a near-push means it should be
+  **revoked and rotated**.
+- The `origin` remote has not been pushed to since the restructure. `git push` will be a
+  large diff (139 deletions in phase 0 alone); force is not required since history is
+  continuous, but review it before pushing.
