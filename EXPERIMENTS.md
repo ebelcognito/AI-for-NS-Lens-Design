@@ -80,6 +80,22 @@ Verdict: CMA-ME earns "search", robust across both collinear and forced-fold geo
 | `fold_gallery.py` | orderly-fold gallery; imported by the disc renderers |
 | `render_fig_archive.py`, `render_fig_exemplars.py` | paper figures |
 
+## Status: which of these now have a config
+
+Phase 2 replaces runner scripts with configs. A config is only allowed to land after
+`tests/test_qd_equivalence.py` shows it reproduces its script cell-for-cell.
+
+| experiment | config | script (still present) |
+|---|---|---|
+| #5 fold-QD | `python -m nslens.qd fold_qd` | `run_fold_qd.py` |
+| #7 tilt ablation | `python -m nslens.qd fold_qd_notilt` | `run_fold_qd.py --lock-tilt` |
+| #6 orderly | `python -m nslens.qd orderly_qd` | `run_orderly_qd.py` |
+| #8 multifield | `python -m nslens.qd multifield_qd` | `run_multifield_qd.py` |
+| prism fold | `python -m nslens.qd prism_fold_qd` | `run_prism_fold_qd.py` |
+| doc 12 ablation | — not yet | `run_fold_qd_descriptors.py` |
+| AR/VR | — not yet | `run_arvr_qd.py` |
+| #1, #2, #10 phase-0 | — not yet | `run.py`, `run_single.py` |
+
 ## What this means for the refactor
 
 Nothing above is safe to delete. The redundancy is in the *shape*, not the content:

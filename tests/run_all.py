@@ -51,6 +51,8 @@ def main() -> int:
                 ["tests/test_element_equivalence.py"], "ALL EQUIVALENCE CHECKS PASS"),
             run("Layout == legacy scene builders",
                 ["tests/test_scene_equivalence.py"], "ALL SCENE EQUIVALENCE CHECKS PASS"),
+            run("Problem constants == legacy modules",
+                ["tests/test_problem_constants.py"], "ALL CONSTANTS AGREE"),
             run("fold1 benchmark (13/13)",
                 ["ns_probe/benchmarks/fold1_env/verify_fold1.py", str(ref)],
                 "13/13 checks passed"),
@@ -58,6 +60,10 @@ def main() -> int:
                 ["codev_handoff/verify_v2.py"], "ALL FIELDS CLOSE"),
             run("typed-interaction physics checks",
                 ["ns_probe/test_typed_interactions.py"], "ALL CHECKS PASSED"),
+            # slowest check (~2 min): reruns 5 legacy runners and their nslens configs
+            run("QD driver == legacy runners (5 experiments)",
+                ["tests/test_qd_equivalence.py", "--evals", "600"],
+                "ALL QD EQUIVALENCE CHECKS PASS"),
         ]
 
     n_ok = sum(results)

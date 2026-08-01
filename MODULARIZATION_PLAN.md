@@ -165,13 +165,63 @@ re-deriving the same geometry twice.
 
 Gate: `pin_geometry.py` green after every commit.
 
-## Phase 2 — strangle the runners
+## Phase 2 — strangle the runners (IN PROGRESS)
 
-Six QD runners collapse to six ~20-line configs behind one driver. Each old script
-becomes a shim that forwards to the driver, so every existing command line keeps working.
+**Done: the 5 QD runners now have config equivalents that reproduce them exactly.**
 
-Gate: for one fixed seed, the new driver must reproduce an existing `archive.json`
-cell-for-cell before its shim lands.
+```
+python -m nslens.qd --list
+python -m nslens.qd fold_qd --evals 14000 --seed 0 --out runs/fold_qd
+```
+
+| config | replaces | equivalence at 600 evals, seed 0 |
+|---|---|---|
+| `fold_qd` | `run_fold_qd.py` (#5) | 31 cells identical |
+| `fold_qd_notilt` | `run_fold_qd.py --lock-tilt` (#7) | 43 cells identical |
+| `orderly_qd` | `run_orderly_qd.py` (#6) | 31 cells identical |
+| `prism_fold_qd` | `run_prism_fold_qd.py` | 71 cells identical |
+| `multifield_qd` | `run_multifield_qd.py` (#8) | 31 cells identical |
+
+"Identical" means cells, genotypes, fitness, behaviour coordinates, every `info` field
+the legacy runner wrote, the invalid count and the full history — verified by
+`tests/test_qd_equivalence.py`, which reruns both and diffs them.
+
+New modules:
+
+```
+nslens/search/cma_me.py       moved from ns_probe (shim left behind)
+nslens/qd/observation.py      the ~20 lines every runner opened with, once
+nslens/qd/problems.py         genome box + genotype -> Layout  (Fold, PrismFold)
+nslens/qd/fitness.py          registry: focused_throughput, coherent_focused_throughput
+nslens/qd/descriptors.py      registry: tir_bounces, thinness
+nslens/qd/driver.py           the CMA-ME loop, once
+nslens/qd/experiments.py      one config per experiment
+nslens/qd/__main__.py         the CLI
+```
+
+### Three constants the equivalence test caught
+
+Writing the configs by reading the scripts produced three wrong ones. Each was found by
+the test, not by review — which is the argument for the test:
+
+1. `multifield_qd` uses **17 rays, not 21**. Three fields per evaluation is 3x the cost,
+   so the legacy runner traded bundle resolution for evaluations.
+2. `prism_fold_qd` uses thinness bounds **(70, 170), not (10, 120)** — its detector is at
+   x = 170, so T is measured against a different plane.
+3. `multifield_qd` tolerates **empty fields**: a field that catches nothing scores 0
+   rather than invalidating the evaluation, and only the *central* field must carry a
+   dominant signature. Getting this wrong changed the invalid count (42 vs 48) while
+   leaving every cell identical — the kind of silent drift only a cell-for-cell diff catches.
+
+### Remaining in phase 2
+
+- `run_fold_qd_descriptors.py` (doc 12 ablation) — needs the descriptor registry
+  extended with the locus / tilt / nsfrac / critmargin / robust axes.
+- `run_arvr_qd.py` — needs an `ArvrProblem` (PointFan source, `arvr_metrics`).
+- `run.py` / `run_single.py` (#1, #2, #10) — the phase-0 probe env, a different
+  genome (per-face reflectivity) and archive; lowest priority, but the experiments
+  are cited so the configs must exist before the scripts go.
+- Then the legacy runners become shims, and phase 4 deletes them.
 
 ## Phase 3 — analyze / render / export
 
