@@ -29,6 +29,23 @@ part of the scientific record, not failures to clean up.
 | 9 | Physics validation | — | `analyze_physics.py` | — | ✅ 100% of 697 TIR events past critical |
 | 10 | Symmetric catadioptric (longer) | `run_single.py` | `analyze.py` | `results_single_long/` | ✅ overturned the "symmetric can't focus" cap |
 
+### The phase-0 probe env is FROZEN (decided 2026-08-01)
+
+`probe.py`, `probe_single.py`, `run.py`, `run_single.py`, `analyze.py`,
+`render_designs.py` — experiments #1, #2 and #10 — will **not** be ported to `nslens`.
+
+Those experiments were built on **forced per-surface reflectivity**: coated partial
+mirrors, a lossy crutch. Experiment #3 (doc 06) is the pivot that replaced them —
+the high-energy fold is TIR, loss-free, needing no coating and no polarization. Their
+own verdicts say so: #1 and #2 are ⚠️ negative, and #10's correction is about the
+symmetric *catadioptric* family, which the TIR route superseded.
+
+They are a self-contained island: nothing outside those six files imports any of them
+(verified by import graph). They still run, unchanged. Because the results are cited in
+MASTER_CONTEXT they are kept rather than deleted — but they are frozen, so no config,
+no shim, and no equivalence test. They can be deleted whenever the record no longer
+needs them, with no effect on anything else.
+
 ## Discovery control — E1–E4 (docs 14, 15, 16)
 
 The program's #1 question: does CMA-ME *search*, or merely enumerate?
@@ -94,7 +111,7 @@ Phase 2 replaces runner scripts with configs. A config is only allowed to land a
 | prism fold | `python -m nslens.qd prism_fold_qd` | `run_prism_fold_qd.py` |
 | doc 12 ablation | `python -m nslens.qd desc_<axis>[_x_<axis2>]` | `run_fold_qd_descriptors.py` |
 | AR/VR | `python -m nslens.qd arvr_qd` | `run_arvr_qd.py` |
-| #1, #2, #10 phase-0 | — not yet | `run.py`, `run_single.py` |
+| #1, #2, #10 phase-0 | **frozen, not porting** | `run.py`, `run_single.py` |
 
 The ablation axes are `baseline`, `nsfrac`, `tilt`, `critmargin`, `locus`, `robust`,
 `thinness` — any of them for either grid axis, e.g. `desc_locus`,

@@ -58,6 +58,9 @@ def main() -> int:
                 "13/13 checks passed"),
             run("CODE V Tier-A v2 (5 fields close)",
                 ["codev_handoff/verify_v2.py"], "ALL FIELDS CLOSE"),
+            run("analysis == legacy analysers (numbers)",
+                ["tests/test_analysis_equivalence.py"],
+                "ALL ANALYSIS EQUIVALENCE CHECKS PASS"),
             run("typed-interaction physics checks",
                 ["ns_probe/test_typed_interactions.py"], "ALL CHECKS PASSED"),
             # slowest check by far (~8 min): reruns every legacy runner AND its nslens
