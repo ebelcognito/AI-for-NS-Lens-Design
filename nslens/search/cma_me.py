@@ -174,7 +174,8 @@ class GridArchive:
 class CMA_ME:
     def __init__(self, archive: GridArchive, evaluate: Callable, *,
                  sample_genotype: Callable, bounds, n_emitters: int = 5,
-                 sigma0: float = 0.15, popsize: int = 10, seed: int = 0):
+                 sigma0: float = 0.15, popsize: int = 10, seed: int = 0,
+                 param_scaling: str = "isotropic"):
         self.archive = archive
         self.evaluate = evaluate
         self.sample_genotype = sample_genotype
@@ -185,24 +186,47 @@ class CMA_ME:
         self.popsize = popsize
         self.rng = np.random.default_rng(seed)
         self.n_emitters = n_emitters
+        if param_scaling not in ("isotropic", "normalized"):
+            raise ValueError(f"param_scaling must be 'isotropic' or 'normalized', got {param_scaling!r}")
+        self.param_scaling = param_scaling
+        # "isotropic" (legacy): one absolute step, sigma0 * mean(range), shared by every
+        # dimension. Dimensions whose own range is far below the mean are then sampled
+        # far outside their bounds and land on the clip -- e.g. for the 2-element probe
+        # the step is 360% of nidx's range but 3.4% of cx's.
+        # "normalized": the emitter searches the unit cube, so sigma0 means "this fraction
+        # of each parameter's own range" in every dimension.
+        self._sigma_abs = self.sigma0 * float(np.mean(self.scale))
+        self._unit_lo = np.zeros_like(self.lo)
+        self._unit_hi = np.ones_like(self.hi)
         self.emitters: List[CMAES] = [self._new_emitter(seed + i) for i in range(n_emitters)]
         self.n_evals = 0
         self.history: List[dict] = []
+
+    def _to_unit(self, x: np.ndarray) -> np.ndarray:
+        return (np.asarray(x, dtype=np.float64) - self.lo) / self.scale
+
+    def _from_unit(self, u: np.ndarray) -> np.ndarray:
+        return self.lo + np.asarray(u, dtype=np.float64) * self.scale
 
     def _new_emitter(self, seed: int) -> CMAES:
         x0 = self.archive.random_elite(self.rng)
         if x0 is None:
             x0 = self.sample_genotype(self.rng)
-        # sigma0 is a fraction of each parameter's range (anisotropic via clipping bounds)
-        sig = self.sigma0 * float(np.mean(self.scale))
-        return CMAES(np.asarray(x0, dtype=np.float64), sig, popsize=self.popsize,
+        x0 = np.asarray(x0, dtype=np.float64)
+        if self.param_scaling == "normalized":
+            return CMAES(self._to_unit(x0), self.sigma0, popsize=self.popsize,
+                         seed=seed, bounds=(self._unit_lo, self._unit_hi))
+        return CMAES(x0, self._sigma_abs, popsize=self.popsize,
                      seed=seed, bounds=(self.lo, self.hi))
 
     def _step_emitter(self, emitter: CMAES) -> int:
         X = emitter.ask()
+        # The emitter searches the unit cube under "normalized"; the evaluator and the
+        # archive always speak world units.
+        Xw = self._from_unit(X) if self.param_scaling == "normalized" else X
         keys = np.empty(len(X))
         added_any = False
-        for k, x in enumerate(X):
+        for k, x in enumerate(Xw):
             ev = self.evaluate(x)
             self.n_evals += 1
             status, old = self.archive.add(

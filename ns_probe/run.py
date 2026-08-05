@@ -38,6 +38,9 @@ def main():
     ap.add_argument("--popsize", type=int, default=10)
     ap.add_argument("--sigma0", type=float, default=0.12)
     ap.add_argument("--flux-floor", type=float, default=0.08)
+    ap.add_argument("--param-scaling", choices=["isotropic", "normalized"], default="isotropic",
+                    help="isotropic = legacy shared absolute CMA step; "
+                         "normalized = sigma0 is a fraction of each parameter's own range")
     ap.add_argument("--out", type=str, default=str(REPO / "ns_probe" / "results"))
     args = ap.parse_args()
 
@@ -55,6 +58,7 @@ def main():
         algo = CMA_ME(
             archive, ev, sample_genotype=sample_genotype, bounds=(lo, hi),
             n_emitters=args.emitters, sigma0=args.sigma0, popsize=args.popsize, seed=args.seed,
+            param_scaling=args.param_scaling,
         )
 
         def logger(rec):
@@ -82,6 +86,7 @@ def main():
         meta=dict(
             evals=int(algo.n_evals), seed=int(args.seed), b_in=float(b_in),
             flux_floor=float(args.flux_floor), bc_bins=BC_BINS, bc_bounds=BC_BOUNDS,
+            param_scaling=args.param_scaling, sigma0=float(args.sigma0),
             bc_axes=["device_depth_T (thin=small)", "mean_axial_reversals (folded>=2)"],
             dim=int(probe.DIM), n_elem=int(probe.N_ELEM),
             sim_errors=int(ev.n_errors), sim_calls=int(ev.n_calls),
