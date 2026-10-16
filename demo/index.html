@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optical Refinement Demo: Per-Ray Gradients & Levenberg-Marquardt</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Header -->
+    <header>
+      <div class="header-title">
+        <h1>
+          <span>⚡ Optical Refinement Engine</span>
+          <span class="badge badge-cyan">Interactive Demo</span>
+        </h1>
+        <p>Understanding Per-Ray Sensitivity, Gauss-Newton Curvature Rank, and Ray Sampling in Freeform Systems</p>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-emerald">Physics Verified</span>
+        <span class="badge badge-amber">Off-Axis Freeform</span>
+      </div>
+    </header>
+
+    <!-- SECTION 1: EXECUTIVE BRIEF (ADHD-FRIENDLY RECAP) -->
+    <div class="card" style="border-left: 4px solid var(--cyan);">
+      <div class="card-title">
+        <span>🎯 Zoom Out: The Project, The 5-Mirror Setup & What Qwen Did</span>
+        <span class="badge badge-cyan">Executive Summary</span>
+      </div>
+      
+      <div class="grid-3" style="gap: 12px; margin-top: 10px;">
+        <div class="qa-box" style="margin-bottom: 0;">
+          <div class="qa-question">1. What are we trying to achieve?</div>
+          <div class="qa-answer">
+            A high-resolution, compact <strong>off-axis freeform spectrometer</strong> (500–1100 nm, 10 mm slit, F/3.8, ~100 nm/mm dispersion) with diffraction-limited imaging (&lt;2 µm spot). 
+            <br><br>
+            <strong>Why not SFT/RL?</strong> SFT & RL are macro-explorers (generating rough numbers). They cannot solve the continuous, sub-micron physical aberration-balancing problem. What is missing is a <strong>high-precision physical refinement engine</strong>.
+          </div>
+        </div>
+
+        <div class="qa-box" style="margin-bottom: 0; border-left-color: var(--amber);">
+          <div class="qa-question">2. What is the problem with the 5-mirror setup?</div>
+          <div class="qa-answer">
+            To make the spectrometer compact (~100 cm³) and clear the entrance slit, 5 mirrors were added. 
+            <br><br>
+            <strong>The Catch:</strong> 6 optical surfaces × high-order XY freeform polynomials created dozens of coupled, sensitive parameters. The standard optimizer (CMA / Powell) stalled at <strong>4.5 µm RMS spot</strong>, unable to reach the diffraction-limited floor (&lt;1–2 µm).
+          </div>
+        </div>
+
+        <div class="qa-box" style="margin-bottom: 0; border-left-color: var(--rose);">
+          <div class="qa-question">3. What did Qwen ACTUALLY do?</div>
+          <div class="qa-answer">
+            <strong>Qwen did NOT optimize the mirror shapes!</strong>
+            <br><br>
+            Instead, it ran a passive <strong>Monte Carlo tolerance & refocusing study</strong>: froze the existing layout, injected random 5 µm translation and 15 arcsec tilt errors across 200 trials, and tested a coarse 5-position detector focus shift (-100 to +100 µm). It screened assembly tolerance, not optical performance!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: INTERACTIVE RAY TRACER & PER-RAY SENSITIVITY -->
+    <div class="grid-2">
+      <!-- Left: Ray Tracing View -->
+      <div class="card">
+        <div class="card-title">
+          <span>🔍 Off-Axis Optical Ray Trace</span>
+          <span class="badge badge-cyan" id="rayCountBadge"><span id="rayCountVal">15</span> Rays Traced</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="rayTraceCanvas" width="580" height="300"></canvas>
+        </div>
+        
+        <div class="metric-row">
+          <div class="metric-pill">
+            <div class="metric-label">RMS Spot Blur</div>
+            <div class="metric-number" id="rmsVal" style="color: var(--cyan);">0.5518</div>
+            <div class="metric-sub">Target: &lt; 0.001</div>
+          </div>
+          <div class="metric-pill">
+            <div class="metric-label">Active Pupil Rays</div>
+            <div class="metric-number" id="pupilRayPill" style="color: #cbd5e1;">15</div>
+            <div class="metric-sub">ρ ∈ [-1.0, +1.0]</div>
+          </div>
+          <div class="metric-pill">
+            <div class="metric-label">Curvature Condition</div>
+            <div class="metric-number" id="condRayPill" style="color: var(--emerald);">302.3</div>
+            <div class="metric-sub">κ(JᵀJ) Stability</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; display: flex; gap: 8px;">
+          <button id="btnPresetAberrated" class="btn btn-secondary">Load Aberrated Start</button>
+          <button id="btnPresetFocused" class="btn btn-secondary">Load Ideal Focus</button>
+        </div>
+      </div>
+
+      <!-- Right: Spot Diagram & Per-Ray Gradients -->
+      <div class="card">
+        <div class="card-title">
+          <span>🎯 Detector Spot Diagram & Per-Ray Sensitivity</span>
+          <span class="badge badge-rose">Red Arrows: ∂r_i / ∂p</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="spotCanvas" width="580" height="300"></canvas>
+        </div>
+
+        <div class="alert alert-info" style="margin-top: 12px; margin-bottom: 0;">
+          <div>
+            <strong>How 1 parameter affects each ray differently:</strong><br>
+            <span id="selParamDesc">Defocus (p1): dr/dp = ρ. Top marginal ray (ρ=+1) moves UP, bottom marginal (ρ=-1) moves DOWN, chief ray (ρ=0) stays STILL!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: PARAMETER CONTROLS & RAY COUNT SLIDER -->
+    <div class="card">
+      <div class="card-title">
+        <span>🎛️ Optical Parameter Knobs & Pupil Sampling</span>
+        <span style="font-size: 12px; color: var(--text-muted);">Select radio button to visualize that parameter's sensitivity vectors on detector</span>
+      </div>
+
+      <div class="grid-3" style="gap: 16px;">
+        <!-- Column 1: p0 and p1 -->
+        <div class="controls-panel">
+          <div class="slider-group">
+            <div class="slider-header">
+              <label class="slider-name">
+                <input type="radio" name="paramSel" id="selParamRadio_0"> <strong>p0:</strong> Global Tilt / Prism
+              </label>
+              <span class="slider-val" id="val_p0">+0.15</span>
+            </div>
+            <input type="range" id="slider_p0" min="-1.0" max="1.0" step="0.01" value="0.15">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label class="slider-name">
+                <input type="radio" name="paramSel" id="selParamRadio_1" checked> <strong>p1:</strong> Curvature (Defocus)
+              </label>
+              <span class="slider-val" id="val_p1">-0.40</span>
+            </div>
+            <input type="range" id="slider_p1" min="-1.0" max="1.0" step="0.01" value="-0.40">
+          </div>
+        </div>
+
+        <!-- Column 2: p2 and p3 -->
+        <div class="controls-panel">
+          <div class="slider-group">
+            <div class="slider-header">
+              <label class="slider-name">
+                <input type="radio" name="paramSel" id="selParamRadio_2"> <strong>p2:</strong> Astigmatism (X² - Y²)
+              </label>
+              <span class="slider-val" id="val_p2">+0.25</span>
+            </div>
+            <input type="range" id="slider_p2" min="-1.0" max="1.0" step="0.01" value="0.25">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label class="slider-name">
+                <input type="radio" name="paramSel" id="selParamRadio_3"> <strong>p3:</strong> Coma (Freeform Cubic)
+              </label>
+              <span class="slider-val" id="val_p3">-0.30</span>
+            </div>
+            <input type="range" id="slider_p3" min="-1.0" max="1.0" step="0.01" value="-0.30">
+          </div>
+        </div>
+
+        <!-- Column 3: p4 and Ray Count Slider -->
+        <div class="controls-panel">
+          <div class="slider-group">
+            <div class="slider-header">
+              <label class="slider-name">
+                <input type="radio" name="paramSel" id="selParamRadio_4"> <strong>p4:</strong> Spherical (Asphere ρ⁴)
+              </label>
+              <span class="slider-val" id="val_p4">+0.50</span>
+            </div>
+            <input type="range" id="slider_p4" min="-1.0" max="1.0" step="0.01" value="0.50">
+          </div>
+
+          <div class="slider-group" style="background: rgba(56, 189, 248, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.2);">
+            <div class="slider-header">
+              <label class="slider-name" style="color: var(--cyan);">
+                <strong>Number of Rays (M):</strong>
+              </label>
+              <span class="slider-val" id="val_rays">15</span>
+            </div>
+            <input type="range" id="sliderRays" min="2" max="50" step="1" value="15">
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+              Try setting M &lt; 5 to see Rank Deficiency & Aliasing!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aliasing Alert Box -->
+      <div id="aliasingAlert" class="alert alert-danger" style="margin-top: 14px; margin-bottom: 0; display: none;"></div>
+    </div>
+
+    <!-- SECTION 4: HESSIAN RANK & EIGENVALUES (PLAIN LM VS PER-RAY LM) -->
+    <div class="grid-2">
+      <!-- Spectrum Chart -->
+      <div class="card">
+        <div class="card-title">
+          <span>📊 Curvature Hessian Eigenvalue Spectrum</span>
+          <span style="font-size: 11px; color: var(--text-muted);">λ₁ to λ₅ of JᵀJ</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="spectrumCanvas" width="580" height="240"></canvas>
+        </div>
+
+        <div class="grid-2" style="margin-top: 12px; gap: 10px;">
+          <div class="metric-pill">
+            <div class="metric-label">Plain LM Hessian Rank</div>
+            <div class="metric-number" id="rankScalarBadge" style="color: var(--rose); font-size: 14px;">Rank: 1 / 5 (Degenerate)</div>
+            <div class="metric-sub">4 Zero Eigenvalues! Blind to cross-coupling.</div>
+          </div>
+          <div class="metric-pill">
+            <div class="metric-label">Per-Ray LM Hessian Rank</div>
+            <div class="metric-number" id="rankRayBadge" style="color: var(--emerald); font-size: 14px;">Rank: 5 / 5 (Full Rank)</div>
+            <div class="metric-sub">Full multi-dimensional wavefront curvature.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matrix Comparison Heatmap -->
+      <div class="card">
+        <div class="card-title">
+          <span>🧮 Gauss-Newton Hessian Matrices (5 × 5)</span>
+          <span style="font-size: 11px; color: var(--text-muted);">H = JᵀJ</span>
+        </div>
+
+        <div class="grid-2" style="gap: 12px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--rose); margin-bottom: 6px;">
+              [A] Plain LM (1D Scalar Residual)
+            </div>
+            <div class="matrix-grid" id="matrixScalar"></div>
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+              Outer product of 1 gradient vector: <strong>Rank 1</strong>. Degenerates into slow gradient descent!
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--emerald); margin-bottom: 6px;">
+              [B] Per-Ray LM (Preserved Ray Residuals)
+            </div>
+            <div class="matrix-grid" id="matrixRay"></div>
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+              Sum of M independent outer products: <strong>Full Rank 5</strong>. Invertible Newton step!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: LIVE OPTIMIZATION RACE -->
+    <div class="card">
+      <div class="card-title">
+        <span>🏁 Live Optimization Race: GD vs Plain LM vs Per-Ray LM</span>
+        <div class="btn-group">
+          <button id="btnStepRace" class="btn btn-secondary">Step 1 Iteration</button>
+          <button id="btnAutoRace" class="btn btn-primary">▶ Auto-Run Race</button>
+          <button id="btnResetRace" class="btn btn-secondary">Reset Race</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="canvas-wrapper">
+          <canvas id="convergenceCanvas" width="580" height="240"></canvas>
+        </div>
+
+        <div style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="metric-row">
+            <div class="metric-pill">
+              <div class="metric-label">Iteration Step</div>
+              <div class="metric-number" id="raceStepCount" style="color: #fff;">0</div>
+              <div class="metric-sub">Max 15 iterations</div>
+            </div>
+            <div class="metric-pill">
+              <div class="metric-label" style="color: var(--amber);">GD RMS Blur</div>
+              <div class="metric-number" id="raceRMS_gd" style="color: var(--amber);">--</div>
+              <div class="metric-sub">Slow first-order crawl</div>
+            </div>
+            <div class="metric-pill">
+              <div class="metric-label" style="color: var(--rose);">Plain LM RMS</div>
+              <div class="metric-number" id="raceRMS_naive" style="color: var(--rose);">--</div>
+              <div class="metric-sub">Stalled by Rank-1 Hessian</div>
+            </div>
+            <div class="metric-pill">
+              <div class="metric-label" style="color: var(--emerald);">Per-Ray LM RMS</div>
+              <div class="metric-number" id="raceRMS_perray" style="color: var(--emerald);">--</div>
+              <div class="metric-sub">Snaps to 0.0000 in 2 steps!</div>
+            </div>
+          </div>
+
+          <div class="alert alert-success" style="margin-top: 14px; margin-bottom: 0;">
+            <div>
+              <strong>Why Per-Ray LM Wins:</strong> It preserves the individual sensitivities of each ray. The resulting Gauss-Newton curvature matrix H = JᵀJ is full rank, so the solver computes the exact coupled parameter changes needed to eliminate defocus, coma, and spherical aberration simultaneously in a single step!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 24px; text-align: center; color: var(--text-dim); font-size: 12px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+      AI for Non-Sequential Lens Design · Optical Refinement Engine Demo · Built with Antigravity
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

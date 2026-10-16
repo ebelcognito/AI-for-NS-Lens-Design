@@ -399,6 +399,10 @@ class Simulator {
       if (this.scene && this.scene.recordInteractions) {
         this.energyLedger = { emitted: 0, delivered: 0, escaped: 0, absorbed: 0, truncated: 0, unfinished: 0 };
         this.scene.__raySeqRecords = [];
+        this.scene.__rayTerminationRecords = [];
+        this.scene.__rayTerminationDropped = 0;
+        this.scene.__rayTerminationOverflowEnergy = 0;
+        this.nextRayRecordId = 0;
       }
     }
 
@@ -474,6 +478,8 @@ class Simulator {
               // NS-probe energy ledger: every traced ray's energy enters the books here.
               if (newRay && this.scene.recordInteractions && this.energyLedger) {
                 this.energyLedger.emitted += (newRay.brightness_s || 0) + (newRay.brightness_p || 0);
+                newRay.__recordId = this.nextRayRecordId++;
+                newRay.__parentRecordId = null;
               }
               this.pendingRays.push(newRay);
             }
@@ -485,6 +491,12 @@ class Simulator {
             if (this.scene.recordInteractions && this.energyLedger) {
               this.energyLedger.emitted += ret.truncation;
               this.energyLedger.truncated += ret.truncation;
+              this.recordRayTermination(null, 'truncated', {
+                energy: ret.truncation,
+                detail: 'source_side',
+                historyComplete: false,
+                aggregate: true,
+              });
             }
           }
           if (ret.brightnessScale) {
@@ -529,6 +541,64 @@ class Simulator {
   }
 
   /**
+   * Record the final disposition of one traced branch.
+   *
+   * `raySequences` intentionally remains the detector-crossing compatibility API.
+   * This second stream closes its blind spot: escaped, absorbed, truncated and
+   * unfinished branches retain their histories too. Aggregate energy that never
+   * existed as a separately traced ray is marked `historyComplete: false` and must
+   * not be treated as an exact interaction path.
+   *
+   * @param {Ray|null} ray
+   * @param {'delivered'|'escaped'|'absorbed'|'truncated'|'unfinished'} outcome
+   * @param {Object} options
+   * @returns {void}
+   * @private
+   */
+  recordRayTermination(ray, outcome, options = {}) {
+    if (!(this.scene && this.scene.recordInteractions)) return;
+    if (!this.scene.__rayTerminationRecords) this.scene.__rayTerminationRecords = [];
+
+    const energy = options.energy != null
+      ? options.energy
+      : ray
+        ? (ray.brightness_s || 0) + (ray.brightness_p || 0)
+        : 0;
+    if (!(energy > 0)) return;
+
+    if (this.scene.__rayTerminationRecords.length >= 200000) {
+      this.scene.__rayTerminationDropped = (this.scene.__rayTerminationDropped || 0) + 1;
+      this.scene.__rayTerminationOverflowEnergy =
+        (this.scene.__rayTerminationOverflowEnergy || 0) + energy;
+      return;
+    }
+
+    let seq = options.sequence;
+    if (!seq && ray && ray.__seq) seq = ray.__seq;
+    if (!seq && ray) {
+      seq = [{ x: ray.p1.x, y: ray.p1.y, i: -1, t: 'source' }];
+    }
+    seq = (seq || []).map(v => Object.assign({}, v));
+
+    const point = options.point || (ray ? ray.p1 : null);
+    this.scene.__rayTerminationRecords.push({
+      x: point ? point.x : null,
+      y: point ? point.y : null,
+      dirx: ray ? ray.p2.x - ray.p1.x : null,
+      diry: ray ? ray.p2.y - ray.p1.y : null,
+      b: energy,
+      outcome: outcome,
+      terminalDetail: options.detail || null,
+      hitSensor: !!(ray && ray.__hitSensor),
+      historyComplete: options.historyComplete !== false,
+      aggregate: !!options.aggregate,
+      rayId: ray && ray.__recordId != null ? ray.__recordId : null,
+      parentRayId: ray && ray.__parentRecordId != null ? ray.__parentRecordId : null,
+      seq: seq,
+    });
+  }
+
+  /**
    * Process the rays in `this.pendingRays` during the simulation.
    * @returns {void}
    * @private
@@ -564,6 +634,7 @@ class Simulator {
     var surfaceMergingObjs = [];
 
     const opticalObjs = this.scene.opticalObjs;
+    const recording = !!(this.scene && this.scene.recordInteractions);
 
     while (true) {
       if (new Date() - st_time > 50 && this.enableTimer) {
@@ -885,10 +956,38 @@ class Simulator {
             maxRayDepth = 0;
           }
           if (this.pendingRays[j].depth > maxRayDepth) {
-            const bTrunc = (this.pendingRays[j].brightness_s || 0) + (this.pendingRays[j].brightness_p || 0);
+            const depthRay = this.pendingRays[j];
+            const bTrunc = (depthRay.brightness_s || 0) + (depthRay.brightness_p || 0);
             this.totalTruncation += bTrunc;
             if (this.scene.recordInteractions && this.energyLedger) {
               this.energyLedger.truncated += bTrunc;
+            }
+            if (recording) {
+              const depthSeq = depthRay.__seq
+                ? depthRay.__seq.slice()
+                : [{ x: depthRay.p1.x, y: depthRay.p1.y, i: -1, t: 'source' }];
+              const dinx = depthRay.p2.x - depthRay.p1.x;
+              const diny = depthRay.p2.y - depthRay.p1.y;
+              const dnorm = Math.sqrt(dinx * dinx + diny * diny) || 1;
+              depthSeq.push({
+                x: s_point.x,
+                y: s_point.y,
+                i: s_obj_index,
+                t: 'depth_limit',
+                bIn: bTrunc,
+                bOut: 0,
+                dirInX: dinx / dnorm,
+                dirInY: diny / dnorm,
+                dirOutX: null,
+                dirOutY: null,
+              });
+              this.recordRayTermination(depthRay, 'truncated', {
+                energy: bTrunc,
+                detail: 'max_ray_depth',
+                historyComplete: false,
+                sequence: depthSeq,
+                point: s_point,
+              });
             }
             this.pendingRays[j] = null;
             this.processedRayCount = this.processedRayCount + 1;
@@ -897,7 +996,6 @@ class Simulator {
 
           // --- NS-probe instrumentation: record per-ray interaction sequences ---
           // Gated behind scene.recordInteractions so default behaviour is unchanged.
-          const recording = !!(this.scene && this.scene.recordInteractions);
           const parentRay = this.pendingRays[j];
           let eventVertex = null;
           if (recording) {
@@ -911,6 +1009,11 @@ class Simulator {
               i: s_obj_index,
               bIn: (parentRay.brightness_s || 0) + (parentRay.brightness_p || 0),
             };
+            const dirInX = parentRay.p2.x - parentRay.p1.x;
+            const dirInY = parentRay.p2.y - parentRay.p1.y;
+            const dirInNorm = Math.sqrt(dirInX * dirInX + dirInY * dirInY) || 1;
+            eventVertex.dirInX = dirInX / dirInNorm;
+            eventVertex.dirInY = dirInY / dirInNorm;
             parentRay.__seq.push(eventVertex);
             if (s_obj.constructor && s_obj.constructor.type === 'Detector') {
               parentRay.__hitSensor = true;
@@ -922,6 +1025,8 @@ class Simulator {
                   dirx: parentRay.p2.x - parentRay.p1.x,
                   diry: parentRay.p2.y - parentRay.p1.y,
                   b: eventVertex.bIn,
+                  rayId: parentRay.__recordId,
+                  parentRayId: parentRay.__parentRecordId,
                   seq: parentRay.__seq.slice(),
                 });
               }
@@ -947,6 +1052,16 @@ class Simulator {
             eventVertex.t = eventType;
             eventVertex.bOut = (ret && ret.isAbsorbed) ? 0
               : (parentRay.brightness_s || 0) + (parentRay.brightness_p || 0);
+            if (ret && ret.isAbsorbed) {
+              eventVertex.dirOutX = null;
+              eventVertex.dirOutY = null;
+            } else {
+              const dirOutX = parentRay.p2.x - parentRay.p1.x;
+              const dirOutY = parentRay.p2.y - parentRay.p1.y;
+              const dirOutNorm = Math.sqrt(dirOutX * dirOutX + dirOutY * dirOutY) || 1;
+              eventVertex.dirOutX = dirOutX / dirOutNorm;
+              eventVertex.dirOutY = dirOutY / dirOutNorm;
+            }
           }
           if (ret) {
             if (ret.isUndefinedBehavior) {
@@ -957,6 +1072,12 @@ class Simulator {
               // handler already booked it inside ret.truncation (BaseGlass does).
               if (recording && this.energyLedger && !ret.absorbedInTruncation) {
                 this.energyLedger.absorbed += (parentRay.brightness_s || 0) + (parentRay.brightness_p || 0);
+              }
+              if (recording && !ret.absorbedInTruncation) {
+                this.recordRayTermination(parentRay, 'absorbed', {
+                  energy: eventVertex ? eventVertex.bIn : null,
+                  detail: 'surface_absorption',
+                });
               }
               this.pendingRays[j] = null;
             }
@@ -970,13 +1091,22 @@ class Simulator {
                 // birth type (e.g. 'partial_reflect') and the child's outgoing energy; the
                 // vertex is replaced (not mutated) because the parent's history shares it.
                 if (newRay && recording && parentRay.__seq) {
+                  newRay.__recordId = this.nextRayRecordId++;
+                  newRay.__parentRecordId = parentRay.__recordId;
                   const childSeq = parentRay.__seq.slice();
                   if (newRay.__birthType && childSeq.length > 0) {
                     const shared = childSeq[childSeq.length - 1];
+                    const childDirX = newRay.p2.x - newRay.p1.x;
+                    const childDirY = newRay.p2.y - newRay.p1.y;
+                    const childDirNorm = Math.sqrt(
+                      childDirX * childDirX + childDirY * childDirY
+                    ) || 1;
                     childSeq[childSeq.length - 1] = Object.assign({}, shared, {
                       t: newRay.__birthType,
                       mech: newRay.__birthMech,
                       bOut: (newRay.brightness_s || 0) + (newRay.brightness_p || 0),
+                      dirOutX: childDirX / childDirNorm,
+                      dirOutY: childDirY / childDirNorm,
                     });
                   }
                   newRay.__seq = childSeq;
@@ -990,6 +1120,14 @@ class Simulator {
               if (recording && this.energyLedger) {
                 this.energyLedger.truncated += ret.truncation;
               }
+              if (recording) {
+                this.recordRayTermination(parentRay, 'truncated', {
+                  energy: ret.truncation,
+                  detail: 'interaction_remainder',
+                  historyComplete: false,
+                  aggregate: true,
+                });
+              }
             }
           }
         }
@@ -997,12 +1135,18 @@ class Simulator {
           // NS-probe energy ledger: the ray leaves the scene; energy that crossed a sensor
           // counts as delivered, the rest as escaped (reflected away / missed).
           if (this.scene && this.scene.recordInteractions && this.energyLedger) {
-            const bExit = (this.pendingRays[j].brightness_s || 0) + (this.pendingRays[j].brightness_p || 0);
-            if (this.pendingRays[j].__hitSensor) {
+            const exitRay = this.pendingRays[j];
+            const bExit = (exitRay.brightness_s || 0) + (exitRay.brightness_p || 0);
+            if (exitRay.__hitSensor) {
               this.energyLedger.delivered += bExit;
             } else {
               this.energyLedger.escaped += bExit;
             }
+            this.recordRayTermination(
+              exitRay,
+              exitRay.__hitSensor ? 'delivered' : 'escaped',
+              { energy: bExit, detail: 'left_scene' }
+            );
           }
           this.pendingRays[j] = null;
         }
@@ -1019,7 +1163,13 @@ class Simulator {
     if (this.scene && this.scene.recordInteractions && this.energyLedger) {
       for (const pending of this.pendingRays) {
         if (pending) {
-          this.energyLedger.unfinished += (pending.brightness_s || 0) + (pending.brightness_p || 0);
+          const bUnfinished = (pending.brightness_s || 0) + (pending.brightness_p || 0);
+          this.energyLedger.unfinished += bUnfinished;
+          this.recordRayTermination(pending, 'unfinished', {
+            energy: bUnfinished,
+            detail: 'simulation_stopped',
+            historyComplete: false,
+          });
         }
       }
     }

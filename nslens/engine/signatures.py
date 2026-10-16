@@ -17,6 +17,11 @@ The engine (with scene flag `recordInteractions: true`) now returns:
     without one; truncated = sub-threshold ghosts + depth-budget kills; unfinished =
     rays alive when the simulator stopped early. Closure: emitted == sum of the rest.
 
+  result["rayTerminations"]: one record for every terminal branch, including rays that
+    never reach a detector. Exact records retain the full ``seq``; sub-threshold energy
+    that was never instantiated as a ray is explicitly marked ``aggregate: true`` and
+    ``historyComplete: false``. ``rayTerminationOverflow`` reports any record-cap loss.
+
 This module turns those into checkable statements: classify each sensor-arriving ray's
 sequence into a signature like (('refract','A'),('tir','B'),('tir','A'),('refract','B')),
 aggregate energy per signature, and verify whether a REQUESTED target sequence carries

@@ -1,0 +1,231 @@
+{
+  "families": [
+    "four_freeform",
+    "five_curved",
+    "six_curved"
+  ],
+  "seeds": [
+    2421,
+    2422
+  ],
+  "workers": 2,
+  "bounds": {
+    "center_x_mm": [
+      35,
+      55
+    ],
+    "center_y_mm": [
+      -5,
+      5
+    ],
+    "half_width_mm": [
+      30,
+      50
+    ],
+    "half_height_mm": [
+      5,
+      12.5
+    ],
+    "phase_deg": [
+      -15,
+      15
+    ],
+    "vertex_0_angle_deg": [
+      -18,
+      18
+    ],
+    "vertex_1_angle_deg": [
+      -18,
+      18
+    ],
+    "vertex_2_angle_deg": [
+      -18,
+      18
+    ],
+    "vertex_3_angle_deg": [
+      -18,
+      18
+    ],
+    "vertex_0_radial_fraction": [
+      0.65,
+      1
+    ],
+    "vertex_1_radial_fraction": [
+      0.65,
+      1
+    ],
+    "vertex_2_radial_fraction": [
+      0.65,
+      1
+    ],
+    "vertex_3_radial_fraction": [
+      0.65,
+      1
+    ],
+    "face_0_sag_ratio": [
+      -0.4,
+      0.4
+    ],
+    "face_1_sag_ratio": [
+      -0.4,
+      0.4
+    ],
+    "face_2_sag_ratio": [
+      -0.4,
+      0.4
+    ],
+    "face_3_sag_ratio": [
+      -0.4,
+      0.4
+    ],
+    "freeform_0_mm": [
+      -2,
+      2
+    ],
+    "freeform_1_mm": [
+      -2,
+      2
+    ],
+    "freeform_2_mm": [
+      -2,
+      2
+    ],
+    "skin_split_fraction": [
+      0.25,
+      0.75
+    ],
+    "skin_split_offset_mm": [
+      -3,
+      3
+    ],
+    "skin_split_left_q_delta": [
+      -0.15,
+      0.15
+    ],
+    "skin_split_right_q_delta": [
+      -0.15,
+      0.15
+    ],
+    "back_split_fraction": [
+      0.25,
+      0.75
+    ],
+    "back_split_offset_mm": [
+      -3,
+      3
+    ],
+    "back_split_left_q_delta": [
+      -0.15,
+      0.15
+    ],
+    "back_split_right_q_delta": [
+      -0.15,
+      0.15
+    ],
+    "role_0": [
+      "skin",
+      "mirror",
+      "interface"
+    ],
+    "role_1": [
+      "skin",
+      "mirror",
+      "interface"
+    ],
+    "role_2": [
+      "skin",
+      "mirror",
+      "interface"
+    ],
+    "role_3": [
+      "skin",
+      "mirror",
+      "interface"
+    ],
+    "role_4": [
+      "skin",
+      "mirror",
+      "interface"
+    ],
+    "role_5": [
+      "skin",
+      "mirror",
+      "interface"
+    ],
+    "camera_x_mm": [
+      -5,
+      15
+    ],
+    "camera_y_mm": [
+      -10,
+      10
+    ],
+    "camera_angle_deg": [
+      15,
+      65
+    ],
+    "skin_knot_1_fraction": [
+      0.2333333333333333,
+      0.43333333333333335
+    ],
+    "skin_knot_2_fraction": [
+      0.5666666666666667,
+      0.7666666666666666
+    ],
+    "skin_knot_1_offset_mm": [
+      -2,
+      2
+    ],
+    "skin_knot_2_offset_mm": [
+      -2,
+      2
+    ],
+    "rounding_trim_mm": [
+      4,
+      12
+    ]
+  },
+  "family_overrides": {},
+  "start_designs": {},
+  "constraints": {
+    "min_radius_mm": 2.0,
+    "min_skin_length_mm": 60.0,
+    "min_concave_fraction": 0.9,
+    "min_inward_depth_mm": 1.0,
+    "max_outward_bulge_mm": 0.2,
+    "max_join_deg": 0.0001,
+    "max_join_gap_mm": 1e-07,
+    "entrance_distance_mm": [
+      0.5,
+      15.0
+    ]
+  },
+  "cma": {
+    "evaluations_per_job": 80,
+    "max_proposals_per_job": 800,
+    "population": 10,
+    "sigma": 0.15,
+    "warmup_proposals": 32,
+    "warmup_half_width": 0.2,
+    "stagnant_generations": 5,
+    "uniform_restart_every": 4,
+    "pool_capacity": 12
+  },
+  "rays": {
+    "search": 97,
+    "audit": 769,
+    "final": 1921,
+    "half_fov_deg": 48.0,
+    "search_scan": 32,
+    "audit_scan": 128,
+    "final_scan": 256,
+    "audit_candidates": 3
+  },
+  "objective": {
+    "mean_coverage": 0.35,
+    "worst_coverage": 0.15,
+    "angular_density": 0.25,
+    "view_cosine": 0.25,
+    "length_exponent": 0.5
+  }
+}

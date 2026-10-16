@@ -1,0 +1,81 @@
+{
+  "status": "Search bounds informed by geometry feasibility probes; not proven feasible for every combination.",
+  "architecture": "slit -> added mirror F1 -> powered M1 -> curved reflective grating -> powered M2 -> added mirror F2 -> detector",
+  "first_experiment": "CMA flat-fold control, inherited powered prescription fixed",
+  "optical_targets": {
+    "slit_length_mm": 10,
+    "wavelength_nm": [
+      500,
+      1100
+    ],
+    "input_f_number": 3.8,
+    "grating_lines_per_mm": 300,
+    "inverse_dispersion_nm_per_mm": 100,
+    "slit_magnification": 1
+  },
+  "bounds": {
+    "fold_fraction_1": [
+      0.2,
+      0.85
+    ],
+    "turn_1_deg": [
+      45,
+      135
+    ],
+    "azimuth_1_deg": [
+      0,
+      360
+    ],
+    "fold_fraction_2": [
+      0.2,
+      0.85
+    ],
+    "turn_2_deg": [
+      45,
+      135
+    ],
+    "azimuth_2_deg": [
+      0,
+      360
+    ],
+    "package_rotation_xyz_deg": [
+      [
+        -90,
+        90
+      ],
+      [
+        -90,
+        90
+      ],
+      [
+        -90,
+        90
+      ]
+    ]
+  },
+  "conventions": "Turn is angle between incoming and outgoing propagation directions, not incidence angle. Azimuth uses four_mirror._flat transverse frame. Fractions refer to inherited unfolded chief legs; splitting preserves leg length.",
+  "evidence": [
+    {
+      "source": "experiments/spectrometer_four_mirror_v1/result.json",
+      "role": "Preliminary differential-evolution/local-search feasibility probe, not a CMA result"
+    },
+    {
+      "source": "experiments/spectrometer_four_mirror_fallback_v1/result.json",
+      "role": "Broader random geometry probe found full-support layouts with second fold fraction around .80, motivating expanded bounds"
+    }
+  ],
+  "acceptance": {
+    "geometric_survival_fraction": 1,
+    "sampled_minimum_optical_gap_mm": 2,
+    "detector_obstruction_allowed": false,
+    "flat_aperture_training_margin_mm": 1,
+    "fixed_apertures_during_audit": true
+  },
+  "workflow": "Three population CMA runs, 3600 evaluations each, population24; independent seeds and recorded restarts. No local refinement in this stage. Retain actual evaluated candidates, audit selected incumbents, and render feasible layouts.",
+  "limitations": [
+    "Feasible examples do not establish feasibility of the full hyperrectangle.",
+    "Flat folds retain inherited optical aberrations.",
+    "Circular apertures sized from training rays; dense heldout checks are required.",
+    "Optical gap and envelope omit substrates, mounts, and detector housing."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "status": "provisional_engineering_targets_not_demonstrated_performance",
+  "purpose": "Matched three-surface reference and five-mirror-plus-grating VIS-NIR imaging spectrometer fabrication feasibility study",
+  "reference_prescription": "experiments/spectrometer_final_v1/seed_102/result.json",
+  "candidate_prescription": "experiments/spectrometer_powered_five_mirror_cma_v2_hardware/prescription.json",
+  "inherited_requirements": {
+    "wavelength_range_nm": [
+      500,
+      1100
+    ],
+    "slit_length_mm": 10,
+    "input_f_number": 3.8,
+    "target_inverse_dispersion_nm_per_mm": 100,
+    "target_spatial_magnification": 1,
+    "grating_projected_density_lines_per_mm": 300,
+    "diffraction_order": 1
+  },
+  "proposed_detector_and_slit": {
+    "slit_width_um": 25,
+    "pixel_pitch_um": 10,
+    "active_width_spectral_mm": 8,
+    "active_height_spatial_mm": 12,
+    "detector_type": "2D array; placeholder geometry, not a selected commercial detector",
+    "qualification": "QE and usable SNR at 1100 nm require detector selection and radiometric analysis"
+  },
+  "proposed_acceptance": {
+    "nominal_spectral_lsf_fwhm_max_nm": 3,
+    "aligned_as_built_spectral_lsf_fwhm_max_nm": 4,
+    "spectral_metric_definition": "Worst over slit position and wavelength; finite slit, aberrations, diffraction and pixel integration included; flag multi-peaked profiles separately",
+    "calibrated_wavelength_error_max_nm": 0.5,
+    "calibration_validation": "Held-out spectral lines and slit positions; calibration cannot count as correcting optical blur",
+    "geometric_ray_survival_min_per_field_wavelength": 0.95,
+    "geometric_survival_definition": "All launched rays in denominator; independent of coating loss, diffraction efficiency and QE",
+    "nominal_temperature_C": 20,
+    "operating_temperature_range_C": [
+      15,
+      30
+    ],
+    "thermal_policy": "No mechanical realignment with temperature; temperature-indexed wavelength calibration allowed and independently validated",
+    "assembled_yield_target": 0.95,
+    "yield_reporting": "Report binomial confidence interval; target applies jointly to implemented acceptance gates under explicit manufacturing distributions, not a certification",
+    "packaging": "Report full mechanical envelope; preserve compactness as a trade objective, not a 100 cm3 hard release gate"
+  },
+  "tolerancing_policy": {
+    "perturbations": "Physical component poses about mounting datums, surface errors, groove errors, slit and detector; not normalized search genes",
+    "compensators": "Select bounded physically accessible adjustments before Monte Carlo; one alignment per assembled instrument across all fields/wavelengths",
+    "fabrication_tolerances": "To be derived from sensitivity, compensated Monte Carlo and vendor capability; no arbitrary micrometre or arcsecond release limits"
+  },
+  "release_blockers": [
+    "Finite-width slit and pixel-integrated line-spread model",
+    "Independent optical-engine validation",
+    "Grating groove-law manufacturability and metrology",
+    "Order contamination and order-sorting design",
+    "Detector selection, QE, radiometric throughput and SNR requirements",
+    "Spatial resolution and raw/calibrated smile and keystone requirements",
+    "Substrates, mounting datums, housing, thermal model and alignment access",
+    "Surface figure/slope/roughness specifications linked to vendor metrology",
+    "Stray-light requirements and acceptance test",
+    "Validated tolerance budget and assembly test plan"
+  ],
+  "industry_context": {
+    "source": "https://www.oceanoptics.com/spectrometer/ocean-fx/",
+    "published_comparator": "VIS-NIR 350-1000 nm, 25 um slit, typical 1.64 nm FWHM",
+    "interpretation": "Commercial scale reference only; not a matched 10 mm slit imaging spectrometer and not evidence our targets are achieved"
+  },
+  "rationale": "100 nm/mm times 0.025 mm image width is 2.5 nm; actual slit-width magnification must be measured. A 10 um pixel is about 1 nm sampling at target dispersion. Targets leave nominal-to-assembly headroom and require validation."
+}

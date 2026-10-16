@@ -49,6 +49,22 @@ def coherent_focused_throughput(obs: Observation, *, focus_w: float) -> float:
     return obs.window_energy(focus_w, dominant_only=True) / obs.emitted
 
 
+@register("intended_focused_throughput")
+def intended_focused_throughput(obs: Observation, *, focus_w: float,
+                                target=None) -> float:
+    """Focused input-energy fraction carried by an explicitly requested path.
+
+    Unlike ``coherent_focused_throughput``, the requested path does not silently change
+    when another signature becomes dominant.  The shared driver supplies ``target`` for
+    fixed-condition experiments; calling this fitness without one is a configuration
+    error rather than a fallback to the historically inferred topology.
+    """
+    if target is None:
+        raise ValueError("intended_focused_throughput requires an interaction target")
+    from .interaction_objective import target_focused_throughput
+    return target_focused_throughput(obs, target, focus_w)
+
+
 @register("arvr_relay_3field")
 def arvr_relay_3field(obs: Observation, *, focus_w: float) -> float:
     """Placeholder: the AR/VR relay fitness needs the raw engine result (three sources
@@ -65,6 +81,8 @@ META_DESCRIPTION = {
     "focused_throughput": "focused_throughput (window energy / emitted)",
     "coherent_focused_throughput":
         "coherent_focused_throughput (dominant-signature window energy / emitted)",
+    "intended_focused_throughput":
+        "intended_focused_throughput (target-signature window energy / emitted)",
     "multifield_mean_focused_throughput":
         "mean focused_throughput over fields",
 }

@@ -129,7 +129,8 @@ class ArvrProblem(Problem):
 
     def is_valid(self, p: Dict[str, float]) -> bool:
         """Non-degenerate body AND the curved top stays clear below the display."""
-        if not self.element(p).is_valid():
+        el = self.element(p)
+        if not el.is_valid() or not self.sag_ok(el):
             return False
         return self.half_h + max(p.get("tsag", 0.0), 0.0) < DISPLAY_Y - 2.0
 

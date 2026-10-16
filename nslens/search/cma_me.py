@@ -10,8 +10,9 @@ This is the gradient-free QD solver the probe calls for (not RL, not DQD).
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -21,8 +22,13 @@ import numpy as np
 # ----------------------------------------------------------------------------------
 class CMAES:
     def __init__(self, x0: np.ndarray, sigma0: float, *, popsize: Optional[int] = None,
-                 seed: int = 0, bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None):
+                 seed: int = 0, bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+                 boundary_handling: str = "clip"):
+        if boundary_handling not in ("clip", "reflect"):
+            raise ValueError("boundary_handling must be clip or reflect")
+        self.boundary_handling = boundary_handling
         self.N = int(len(x0))
+        self.seed = int(seed)
         self.rng = np.random.default_rng(seed)
         self.mean = np.asarray(x0, dtype=np.float64).copy()
         self.sigma = float(sigma0)
@@ -53,20 +59,48 @@ class CMAES:
         self.restart_needed = False
         self._last_X: Optional[np.ndarray] = None
         self._last_Y: Optional[np.ndarray] = None
+        self._last_Z: Optional[np.ndarray] = None
+        self._last_raw_X: Optional[np.ndarray] = None
+        self._last_clipping_mask = np.zeros((self.lam, self.N), dtype=bool)
+        self._ask_counter = 0
 
     def ask(self) -> np.ndarray:
+        if self._last_X is not None:
+            raise RuntimeError("ask() called twice without tell()")
         z = self.rng.standard_normal((self.lam, self.N))
         y = z @ (self.B * self.D).T            # y = B D z   (rows are samples)
-        X = self.mean[None, :] + self.sigma * y
+        raw_X = self.mean[None, :] + self.sigma * y
+        X = raw_X
         if self.bounds is not None:
             lo, hi = self.bounds
-            X = np.clip(X, lo, hi)
+            if self.boundary_handling == "reflect":
+                span = hi - lo
+                if np.any(span <= 0) or not np.all(np.isfinite(span)):
+                    raise ValueError("reflection requires finite positive bound spans")
+                folded = np.remainder(X - lo, 2 * span)
+                X = lo + np.minimum(folded, 2 * span - folded)
+            else:
+                X = np.clip(X, lo, hi)
             y = (X - self.mean[None, :]) / self.sigma   # recompute y after clipping
+            clipping_mask = (raw_X < lo) | (raw_X > hi) | ~np.isfinite(raw_X)
+        else:
+            clipping_mask = ~np.isfinite(raw_X)
         self._last_X, self._last_Y = X, y
+        self._last_Z = z
+        self._last_raw_X = raw_X
+        self._last_clipping_mask = clipping_mask
+        self._ask_counter += 1
         return X
 
-    def tell(self, order: np.ndarray) -> None:
+    def tell(self, order: np.ndarray, observations: Optional[Sequence[dict]] = None) -> None:
         """order: indices of the lambda samples from best to worst."""
+        del observations
+        if self._last_Y is None:
+            raise RuntimeError("tell() called before ask()")
+        order = np.asarray(order)
+        if order.shape != (self.lam,) or not np.array_equal(
+                np.sort(order), np.arange(self.lam)):
+            raise ValueError(f"order must be a permutation of range({self.lam})")
         Y = self._last_Y[order]                # (lam, N), best-first
         yw = self.weights @ Y[: self.mu]       # weighted mean step
         self.mean = self.mean + self.sigma * yw
@@ -87,6 +121,10 @@ class CMAES:
         self.sigma *= np.exp((self.cs / self.damps) * (psn / self.chiN - 1))
         self.gen += 1
         self._update_eigen()
+        self._last_X = None
+        self._last_Y = None
+        self._last_Z = None
+        self._last_raw_X = None
         if self.sigma < 1e-11 or self.sigma > 1e7 or not np.isfinite(self.sigma):
             self.restart_needed = True
 
@@ -105,6 +143,97 @@ class CMAES:
         self.D = np.sqrt(vals)
         self.B = vecs
         self.invsqrtC = (vecs * (1.0 / self.D)) @ vecs.T
+
+    @property
+    def last_clipping_mask(self) -> np.ndarray:
+        return self._last_clipping_mask.copy()
+
+    def state_snapshot(self) -> Dict[str, Any]:
+        """Lossless, JSON-compatible CMA state for trajectory replay/distillation."""
+        return {
+            "algorithm": "full_covariance_cma_es",
+            "boundary_handling": self.boundary_handling,
+            "seed": self.seed,
+            "population_size": int(self.lam),
+            "generation": int(self.gen),
+            "ask_counter": int(self._ask_counter),
+            "mean": self.mean.tolist(),
+            "sigma": float(self.sigma),
+            "sigma0": float(self.sigma0),
+            "covariance": self.C.tolist(),
+            "evolution_path_c": self.pc.tolist(),
+            "evolution_path_sigma": self.ps.tolist(),
+            "eigenvectors": self.B.tolist(),
+            "axis_scales": self.D.tolist(),
+            "inverse_sqrt_covariance": self.invsqrtC.tolist(),
+            "restart_needed": bool(self.restart_needed),
+            "rng_state": _json_value(copy.deepcopy(self.rng.bit_generator.state)),
+        }
+
+    @classmethod
+    def from_state_snapshot(
+        cls,
+        snapshot: Dict[str, Any],
+        *,
+        bounds: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+    ) -> "CMAES":
+        """Restore a snapshot so the next ``ask`` exactly replays the RNG stream."""
+        required = (
+            "mean", "sigma", "sigma0", "covariance", "evolution_path_c",
+            "evolution_path_sigma", "eigenvectors", "axis_scales",
+            "inverse_sqrt_covariance", "rng_state", "population_size",
+        )
+        missing = [key for key in required if key not in snapshot]
+        if missing:
+            raise ValueError(f"CMA snapshot missing fields: {missing}")
+        restored = cls(
+            np.asarray(snapshot["mean"], dtype=np.float64),
+            float(snapshot["sigma0"]),
+            popsize=int(snapshot["population_size"]),
+            seed=int(snapshot.get("seed", 0)),
+            bounds=bounds,
+            boundary_handling=snapshot.get("boundary_handling", "clip"),
+        )
+        restored.mean = np.asarray(snapshot["mean"], dtype=np.float64)
+        restored.sigma = float(snapshot["sigma"])
+        restored.C = np.asarray(snapshot["covariance"], dtype=np.float64)
+        restored.pc = np.asarray(snapshot["evolution_path_c"], dtype=np.float64)
+        restored.ps = np.asarray(snapshot["evolution_path_sigma"], dtype=np.float64)
+        restored.B = np.asarray(snapshot["eigenvectors"], dtype=np.float64)
+        restored.D = np.asarray(snapshot["axis_scales"], dtype=np.float64)
+        restored.invsqrtC = np.asarray(
+            snapshot["inverse_sqrt_covariance"], dtype=np.float64)
+        restored.gen = int(snapshot.get("generation", 0))
+        restored._ask_counter = int(snapshot.get("ask_counter", 0))
+        restored.restart_needed = bool(snapshot.get("restart_needed", False))
+        restored.rng.bit_generator.state = copy.deepcopy(snapshot["rng_state"])
+        return restored
+
+    def sampling_snapshot(self) -> Dict[str, Any]:
+        """Return the most recent ask's exact samples and bound intervention."""
+        if self._last_X is None or self._last_Y is None or self._last_Z is None:
+            raise RuntimeError("sampling_snapshot() requires a preceding ask()")
+        return {
+            "sample_id": f"seed{self.seed}:ask{self._ask_counter - 1}",
+            "standard_normal": self._last_Z.tolist(),
+            "transformed_steps": self._last_Y.tolist(),
+            "raw_population": self._last_raw_X.tolist(),
+            "population": self._last_X.tolist(),
+            "clipping_mask": self._last_clipping_mask.astype(int).tolist(),
+        }
+
+
+def _json_value(value: Any) -> Any:
+    """Recursively convert NumPy RNG state to lossless JSON-compatible values."""
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, dict):
+        return {str(key): _json_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_value(item) for item in value]
+    return value
 
 
 # ----------------------------------------------------------------------------------

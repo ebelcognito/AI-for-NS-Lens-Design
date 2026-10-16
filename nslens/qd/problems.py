@@ -29,9 +29,42 @@ class Problem:
     focus_w: float = 8.0
     n_rays: int = 21
     beam_w: float = 8.0
+    #: reject any element with a face steeper than this |sag|/half-chord. 0.268 is
+    #: radius >= 2x half-chord (a gentle cap); above 1.0 the arc exceeds 180 deg and the
+    #: "face" is a bulb. None = the legacy behaviour, which permits q up to 5.0.
+    max_sag_ratio: Optional[float] = None
+    #: interpret the genome's sag genes as FRACTIONS of their own face's half-chord
+    #: rather than absolute mm. A face's chord is not fixed -- top/bottom scale with
+    #: `thick` -- so an absolute sag box means something different at every thickness,
+    #: which is what lets a 6 mm-thick element carry a 15 mm bulb.
+    relative_sag: bool = False
+    #: required clear distance between the element's right-most point and the detector
+    #: plane. None = the legacy behaviour, which is NO check: PrismFoldProblem has always
+    #: enforced a 12 mm gap via its own is_valid, and FoldProblem has never enforced
+    #: anything, so a fold env could hand back a design whose glass passes THROUGH the
+    #: sensor. Measured on the archives that is not hypothetical -- 1 to 6 elites per
+    #: fold24 run sit past x_sensor, and their thinness_T is meaningless because T is
+    #: measured against a plane the body intersects.
+    #:
+    #: Left None by default because switching it on rejects genotypes the frozen
+    #: archives contain, which would break tests/test_qd_equivalence.py's cell-for-cell
+    #: comparison. Opt in per experiment, exactly as param_scaling does.
+    det_clearance: Optional[float] = None
+
+    #: genome sag key -> the half-chord it is relative to under `relative_sag`
+    _SAG_CHORD = {"fsag": "half_h", "bsag": "half_h",
+                  "tsag": "half_thick", "dsag": "half_thick"}
 
     def vec_to_params(self, x: Sequence[float]) -> Dict[str, float]:
-        return dict(zip(self.param_names, [float(v) for v in x]))
+        p = dict(zip(self.param_names, [float(v) for v in x]))
+        if self.relative_sag:
+            # nominal chords (shear ignored here; the exact ratio is re-checked by
+            # max_sag_ratio in is_valid, which uses the sheared corners)
+            chord = {"half_h": self.half_h, "half_thick": p.get("thick", 0.0) / 2.0}
+            for key, which in self._SAG_CHORD.items():
+                if key in p:
+                    p[key] = p[key] * chord[which]
+        return p
 
     def element(self, p: Dict[str, float]) -> Element:
         return Element.from_legacy_params(p, half_h=self.half_h)
@@ -43,7 +76,19 @@ class Problem:
         raise NotImplementedError
 
     def is_valid(self, p: Dict[str, float]) -> bool:
-        return self.element(p).is_valid()
+        el = self.element(p)
+        if not el.is_valid():
+            return False
+        return self.sag_ok(el) and self.detector_clear(el)
+
+    def sag_ok(self, el) -> bool:
+        """No face steeper than max_sag_ratio (no-op when it is None)."""
+        return self.max_sag_ratio is None or el.max_sag_ratio() <= self.max_sag_ratio
+
+    def detector_clear(self, el) -> bool:
+        """Body stops short of the detector plane (no-op when det_clearance is None)."""
+        return (self.det_clearance is None
+                or el.x_extent()[1] < self.x_sensor - self.det_clearance)
 
 
 @dataclass
@@ -108,7 +153,7 @@ class PrismFoldProblem(Problem):
         """Body must be non-degenerate AND stay clear of the detector plane, otherwise
         the detector cuts through the glass."""
         el = self.element(p)
-        if not el.is_valid():
+        if not el.is_valid() or not self.sag_ok(el):
             return False
         return el.x_extent()[1] < self.x_sensor - self.det_gap
 

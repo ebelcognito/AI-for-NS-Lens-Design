@@ -19,9 +19,30 @@ dependencies = [
 #   pip install -e ".[autodiff]"
 [project.optional-dependencies]
 autodiff = ["torch>=2.5"]
+# Neural optical-token encoder and continuous Qwen action head. Choose the CUDA
+# torch build explicitly; the pretrained loader uses the locally cached NF4 model.
+optical-adapter = ["torch>=2.5", "transformers>=5.15,<6", "accelerate>=1.15", "bitsandbytes>=0.50"]
+bridge = ["paramiko>=4,<6"]
+patents = ["beautifulsoup4>=4.12,<5"]
+# Official released EvoTF runtime.  These versions reproduce the adapter/checkpoint
+# provenance documented in nslens.search.evotf_emitter.  Accelerator-specific JAX may
+# instead be installed with evosax==0.3.1 first, then `pip install -e . --no-deps`.
+evotf = [
+    "evosax==0.3.1",
+    "jax==0.6.2",
+    "jaxlib==0.6.2",
+    "flax==0.10.7",
+    "optax==0.2.5",
+]
+
+[project.scripts]
+codev-bridge = "codev_bridge.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["nslens*"]
+include = ["nslens*", "codev_bridge*"]
+
+[tool.setuptools.package-data]
+"nslens.patent_catalog" = ["searches.json"]
 
 # ---------------------------------------------------------------------------
 # Environment note

@@ -14,6 +14,8 @@ Checks (each is a measured assertion, not an eyeball):
   5. Depth-budget truncation is booked in the ledger and closure still holds.
   6. With recordInteractions off, no instrumentation fields appear and detector
      readings agree with the flagged run.
+  7. Terminal histories cover every ledger outcome, including absorbed and
+     depth-truncated rays, and their energy closes against the ledger.
 """
 from __future__ import annotations
 
@@ -47,6 +49,40 @@ def slab_scene(n=1.5, partial=True, reflectivity=None, record=True, max_depth=16
     if record:
         sc["recordInteractions"] = True
     return sc
+
+
+def blocker_scene(record=True):
+    """A single ray that is exactly absorbed by an opaque line blocker."""
+    sc = {"version": 5, "objs": [
+        {"type": "SingleRay", "p1": {"x": 0, "y": 0}, "p2": {"x": 1, "y": 0},
+         "brightness": 1.0},
+        {"type": "Blocker", "p1": {"x": 40, "y": -20},
+         "p2": {"x": 40, "y": 20}},
+    ]}
+    if record:
+        sc["recordInteractions"] = True
+    return sc
+
+
+def termination_energy(result, outcome):
+    """Exact + explicitly aggregated terminal energy for one ledger bucket."""
+    return sum(float(r["b"]) for r in result.get("rayTerminations", [])
+               if r.get("outcome") == outcome)
+
+
+def check_terminal_closure(check, result, label):
+    """Assert that the new terminal-history stream is a lossless ledger partition."""
+    ledger = result["energyLedger"]
+    records = result.get("rayTerminations")
+    check(f"terminal histories present ({label})", isinstance(records, list) and records != [])
+    for outcome in ("delivered", "escaped", "absorbed", "truncated", "unfinished"):
+        residual = termination_energy(result, outcome) - float(ledger.get(outcome, 0.0))
+        check(f"terminal {outcome} closes ({label})", abs(residual) < 1e-9,
+              f"residual={residual:.2e}")
+    overflow = result.get("rayTerminationOverflow", {})
+    check(f"no terminal-record overflow ({label})",
+          overflow.get("droppedRecords") == 0 and overflow.get("energy") == 0,
+          repr(overflow))
 
 
 def main():
@@ -101,6 +137,19 @@ def main():
         check("Fresnel child tagged mech='fresnel'", pr.get("mech") == "fresnel")
         check("ledger closes (Fresnel slab)", abs(ledger_closure(res["energyLedger"])) < 1e-9,
               f"residual={ledger_closure(res['energyLedger']):.2e}")
+        check_terminal_closure(check, res, "Fresnel slab")
+        exact_terms = [r for r in res["rayTerminations"] if not r.get("aggregate")]
+        check("exact terminal branches have IDs and histories",
+              all(r.get("rayId") is not None and r.get("seq") for r in exact_terms))
+        one_detector = slab_scene(n=n)
+        one_detector["objs"].pop()  # remove the rear detector: reflected ghosts now escape
+        escaped_res, _ = runner.simulate(one_detector)
+        escaped_terms = [r for r in escaped_res["rayTerminations"]
+                         if r.get("outcome") == "escaped" and not r.get("aggregate")]
+        check("escaped Fresnel branches retain interaction histories",
+              any(any(v.get("t") == "partial_reflect" for v in r["seq"])
+                  for r in escaped_terms))
+        check_terminal_closure(check, escaped_res, "one-detector Fresnel slab")
 
         # ---- 3. Forced reflectivity knob ----
         print("[3] Forced-reflectivity coating (the artificial knob)")
@@ -136,12 +185,33 @@ def main():
         check("truncation books the killed fold", led["truncated"] > 0.5,
               f"truncated={led['truncated']:.4f}")
         check("ledger still closes", abs(ledger_closure(led)) < 1e-9)
+        check_terminal_closure(check, res, "depth limit")
+        depth_terms = [r for r in res["rayTerminations"]
+                       if r.get("terminalDetail") == "max_ray_depth"]
+        check("depth-killed branches carry explicit incomplete histories",
+              depth_terms != []
+              and all(r.get("historyComplete") is False
+                      and r["seq"][-1].get("t") == "depth_limit"
+                      for r in depth_terms))
 
-        # ---- 6. Flag off => no instrumentation, same physics ----
-        print("[6] Default path unchanged when flag is off")
+        # ---- 6. Exact absorption retains its path and closes its bucket ----
+        print("[6] Absorbed-ray terminal history")
+        res, _ = runner.simulate(blocker_scene())
+        check("blocker books all input as absorbed",
+              abs(res["energyLedger"]["absorbed"] - 1.0) < 1e-12)
+        check_terminal_closure(check, res, "blocker")
+        absorbed = [r for r in res["rayTerminations"] if r["outcome"] == "absorbed"]
+        check("absorbed branch has an exact typed terminal event",
+              len(absorbed) == 1 and absorbed[0]["historyComplete"] is True
+              and absorbed[0]["seq"][-1].get("t") == "absorbed")
+
+        # ---- 7. Flag off => no instrumentation, same physics ----
+        print("[7] Default path unchanged when flag is off")
         res_on, _ = runner.simulate(slab_scene(n=1.5, partial=False, record=True))
         res_off, _ = runner.simulate(slab_scene(n=1.5, partial=False, record=False))
         check("no raySequences when off", "raySequences" not in res_off)
+        check("no rayTerminations when off", "rayTerminations" not in res_off)
+        check("no rayTerminationOverflow when off", "rayTerminationOverflow" not in res_off)
         check("no energyLedger when off", "energyLedger" not in res_off)
         check("identical detector power (TIR-only scene)",
               res_on["detectors"][0]["power"] == res_off["detectors"][0]["power"],

@@ -13,9 +13,11 @@ A descriptor is `fn(ctx: DescriptorContext) -> float`.
 """
 from __future__ import annotations
 
+import itertools
 import math
+from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 
@@ -36,6 +38,13 @@ class DescriptorContext:
     runner: Any = None
     pert_rng: Any = None
     with_robust: bool = False
+    #: multifield only: the field angles evaluated and the per-field fitness, in the same
+    #: order. Empty for a single-field experiment, which is why field_accept refuses to
+    #: run there rather than silently reporting 0.
+    fields: Sequence[float] = ()
+    per_field: Sequence[float] = ()
+    #: Observation.convergence() -- measured once by the evaluator and shared
+    convergence: Optional[Dict[str, Any]] = None
 
 
 _REGISTRY: Dict[str, Callable] = {}
@@ -91,6 +100,70 @@ def tir_bounces(ctx: DescriptorContext) -> float:
     return float(ctx.obs.tir_count)
 
 
+#: Faces, in a FIXED order. This order defines TIR_FACE_VOCAB's indices, and those
+#: indices are written into every archive built on the `tir_faces` axis -- changing the
+#: order silently renames every cell. Do not reorder. ('A' left, 'B' right, 'T' the
+#: BOTTOM edge, 'D' the TOP edge -- see Element.legacy_face_label.)
+TIR_FACES = ("A", "B", "D", "T")
+
+#: Longest fold depth the axis resolves. Measured over all 58,980 scored trace rows the
+#: observed depths are 2-5, so 5 covers 100% of evaluations; 4 would drop 1.8%.
+TIR_FACE_KMAX = 5
+
+
+def _tir_face_vocab():
+    """Every multiset of TIR faces up to TIR_FACE_KMAX, in a fixed canonical order.
+
+    A multiset, not a sequence: "which faces the light bounces off, and how many times
+    each" without the order. Sequence would resolve 254 classes against the multiset's
+    79, but at 4^k it cannot be enumerated into a fixed grid, and 63% of the multiset
+    bins are actually realised against 38% at k<=6 -- this is the granularity that
+    survives being an archive axis.
+    """
+    vocab = []
+    for k in range(TIR_FACE_KMAX + 1):
+        for combo in itertools.combinations_with_replacement(TIR_FACES, k):
+            vocab.append(tuple(sorted(Counter(combo).items())))
+    return vocab
+
+
+TIR_FACE_VOCAB = _tir_face_vocab()
+TIR_FACE_INDEX = {m: i for i, m in enumerate(TIR_FACE_VOCAB)}
+
+
+@register("tir_faces", bins=len(TIR_FACE_VOCAB), bounds=(0.0, float(len(TIR_FACE_VOCAB))),
+          label="TIR face multiset (topology)", aliases=("topology", "fold_faces"))
+def tir_faces(ctx: DescriptorContext) -> float:
+    """WHICH faces the light TIRs off, not merely HOW MANY times it bounces.
+
+    `tir_bounces` is a 9-bin projection of an 804-value quantity, and in the fold24
+    regime it resolves to FOUR values. Measured across every trace on disk, 41.7 distinct
+    interaction signatures compete for a single (tir_bounces, thinness) cell -- 94% of
+    occupied cells hold more than one topology, and the archive deletes all but the best.
+    133 of the 171 catalogued topologies never win a cell anywhere.
+
+    This axis separates them by the multiset of TIR faces, which is what makes two
+    designs structurally different routes rather than the same route at a different
+    depth: A->B->A and A->T->A are both "2 folds" and are not the same optic.
+
+    Out-of-vocabulary (more than TIR_FACE_KMAX bounces) returns an index past the top
+    bound, so `reject_out_of_bounds` discards it rather than clamping it into the last
+    cell -- clamping is exactly the failure this axis exists to fix.
+    """
+    faces = [f for (t, f) in (ctx.obs.dominant_signature or ()) if t == "tir"]
+    key = tuple(sorted(Counter(faces).items()))
+    idx = TIR_FACE_INDEX.get(key)
+    return float(len(TIR_FACE_VOCAB)) + 1.0 if idx is None else float(idx) + 0.5
+
+
+def tir_face_label(idx: int) -> str:
+    """Human-readable name of a `tir_faces` cell index, e.g. 'A2 B1' or 'unfolded'."""
+    if not (0 <= idx < len(TIR_FACE_VOCAB)):
+        return "out-of-vocab"
+    m = TIR_FACE_VOCAB[idx]
+    return " ".join(f"{f}{n}" for f, n in m) if m else "unfolded"
+
+
 @register("thinness", bins=16, bounds=(10.0, 120.0),
           label="thinness_T (thin=small)", aliases=("thinness_T",))
 def thinness(ctx: DescriptorContext) -> float:
@@ -140,6 +213,64 @@ def fold_locus(ctx: DescriptorContext) -> float:
         return 0.0
     edge_tir = sum(1 for (t, f) in dom if t == "tir" and f in ("T", "D"))
     return float(edge_tir) / tir_count
+
+
+@register("beam_convergence", bins=10, bounds=(0.0, 2.0),
+          label="beam_width_ratio_exit_over_entry (packing=small)",
+          aliases=("packing", "beam_ratio"))
+def beam_convergence(ctx: DescriptorContext) -> float:
+    """How much the dominant bundle packs between the entry surface and the exit.
+
+    < 1 the fold pays for itself: the beam leaves narrower than it entered.
+    = 1 the folds are pure redirection, buying compactness but not concentration.
+    > 1 the element is a diffuser with extra steps.
+
+    A design with no measurable dominant bundle reports the top of the range rather than
+    0, so "unmeasurable" cannot masquerade as "perfectly packed".
+    """
+    c = ctx.convergence or ctx.obs.convergence()
+    return float(c["ratio"]) if c["measured"] else 2.0
+
+
+#: a field counts as ACCEPTED when it keeps this fraction of the on-axis performance.
+#: Relative, not absolute: the axis then measures angular ACCEPTANCE (how far the design
+#: keeps working) independently of how bright it is on axis, so a dim-but-wide design and
+#: a bright-but-wide design share a niche and compete on fitness.
+ACCEPT_FRAC = 0.5
+
+
+@register("field_accept", bins=10, bounds=(0.0, 20.0),
+          label="field_acceptance_half_angle_deg", aliases=("accept",))
+def field_accept(ctx: DescriptorContext) -> float:
+    """Angular half-width over which the design keeps working.
+
+    Walks outward from the on-axis field in both directions and stops at the first field
+    that drops below ACCEPT_FRAC of the on-axis value, so it measures the CONTIGUOUS
+    accepted cone -- a design that fails at +-4 deg and happens to revive at +-12 deg is
+    not a wide-field design, it is two narrow ones.
+
+    Reported as the smaller of the two half-widths, i.e. the symmetric cone the design
+    actually supports.
+    """
+    fields, vals = list(ctx.fields), list(ctx.per_field)
+    if not fields or len(fields) != len(vals):
+        raise ValueError("field_accept needs a multifield experiment: set "
+                         "ExperimentConfig.fields to the field angles to sample")
+    i0 = fields.index(0.0)
+    thresh = ACCEPT_FRAC * vals[i0]
+    if vals[i0] <= 0:
+        return 0.0
+
+    def reach(step: int) -> float:
+        """Half-width in degrees before the first field that falls below threshold."""
+        last = 0.0
+        i = i0 + step
+        while 0 <= i < len(fields) and vals[i] >= thresh:
+            last = abs(fields[i] - fields[i0])
+            i += step
+        return last
+
+    return float(min(reach(+1), reach(-1)))
 
 
 def incidence_deg(seq, k) -> Optional[float]:

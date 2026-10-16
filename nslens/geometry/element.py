@@ -170,6 +170,47 @@ class Element:
         return ((c["bottom_right"][0] - c["bottom_left"][0]) > 1.0
                 and (c["top_right"][0] - c["top_left"][0]) > 1.0)
 
+    def sag_ratios(self) -> Dict[str, float]:
+        """Per curved face: |sag| / half-chord, the scale-free curvature.
+
+        This is the number the genome box SHOULD have been bounding. Sag is stored in
+        absolute mm, but a face's chord is not fixed -- the top and bottom chords are
+        `thick` wide (6..45 mm) while the left and right chords are set by half_h and the
+        tilt shear. A +-15 mm sag bound is therefore a gentle cap on one face and an
+        absurdity on another:
+
+            q <= 0.268   radius >= 2 x half-chord, a gentle spherical cap
+            q <= 1.0     at most a hemisphere
+            q >  1.0     the arc exceeds 180 deg -- a BULB, not a face
+
+        At thick=6 the legacy +-15 mm bound permits q = 5.0.
+        """
+        H = self.half_h
+        dA, dB = self._shear("left"), self._shear("right")
+        # left/right: the chord runs corner-to-corner and is tilted, so the sag measured
+        # perpendicular to it is the horizontal sag foreshortened by cos(tilt)
+        half_chord = {
+            "left": float(np.hypot(dA, H)),
+            "right": float(np.hypot(dB, H)),
+            "bottom": abs(self.thick + dB - dA) / 2.0,
+            "top": abs(self.thick - dB + dA) / 2.0,
+        }
+        cos_t = {"left": H / half_chord["left"] if half_chord["left"] else 1.0,
+                 "right": H / half_chord["right"] if half_chord["right"] else 1.0,
+                 "bottom": 1.0, "top": 1.0}
+        out: Dict[str, float] = {}
+        for name in FACE_ORDER:
+            face = self.faces[name]
+            if not face.is_curved:
+                continue
+            hc = half_chord[name]
+            out[name] = abs(face.sag) * cos_t[name] / hc if hc > 1e-9 else float("inf")
+        return out
+
+    def max_sag_ratio(self) -> float:
+        """The steepest face's curvature ratio; 0.0 when every face is flat."""
+        return max(self.sag_ratios().values(), default=0.0)
+
     def x_extent(self) -> tuple:
         """(min, max) x over the whole boundary -- the horizontal footprint of the glass,
         control points included, so a bulging face is not missed."""

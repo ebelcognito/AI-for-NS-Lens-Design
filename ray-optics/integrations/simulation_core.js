@@ -67,6 +67,9 @@ async function runSingleSimulation(sceneJson) {
   // These are no-ops unless the scene JSON requests them, so existing behaviour is unchanged.
   scene.recordInteractions = !!sceneJson.recordInteractions;
   scene.__raySeqRecords = [];
+  scene.__rayTerminationRecords = [];
+  scene.__rayTerminationDropped = 0;
+  scene.__rayTerminationOverflowEnergy = 0;
   if (sceneJson.maxRayDepth != null && isFinite(sceneJson.maxRayDepth)) {
     scene.maxRayDepth = sceneJson.maxRayDepth;
   }
@@ -293,6 +296,11 @@ async function runSingleSimulation(sceneJson) {
   // NS-probe: expose recorded per-ray interaction sequences (empty unless recordInteractions was set).
   if (scene.recordInteractions) {
     result.raySequences = scene.__raySeqRecords || [];
+    result.rayTerminations = scene.__rayTerminationRecords || [];
+    result.rayTerminationOverflow = {
+      droppedRecords: scene.__rayTerminationDropped || 0,
+      energy: scene.__rayTerminationOverflowEnergy || 0,
+    };
   }
 
   const t8_before_stringify = Date.now();
