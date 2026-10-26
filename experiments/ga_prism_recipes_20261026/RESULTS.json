@@ -1,0 +1,248 @@
+{
+ "table": {
+  "TRF_all": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 7,
+   "median_center_um": 118.8273271334761,
+   "median_worst_um": 346.9008664719049,
+   "median_mean_um": 249.65126844813963,
+   "best_worst_um": 247.89016578810023,
+   "median_score": 0.8827987114391778,
+   "median_seconds": 1.7302632331848145
+  },
+  "TRF_all_fd1e-2": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 147.00880260010692,
+   "median_worst_um": 394.56138172877434,
+   "median_mean_um": 308.3678542156444,
+   "best_worst_um": 239.23585525643054,
+   "median_score": 0.9640925458093158,
+   "median_seconds": 1.376368761062622
+  },
+  "TRF_ff": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 1,
+   "median_center_um": 873.2787936777214,
+   "median_worst_um": 1227.3845185438613,
+   "median_mean_um": 905.5400850246373,
+   "best_worst_um": 1227.3845185438613,
+   "median_score": Infinity,
+   "median_seconds": 2.6141977310180664
+  },
+  "STAGE": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 59.881424786665555,
+   "median_worst_um": 96.45625957231626,
+   "median_mean_um": 74.5519655799354,
+   "best_worst_um": 91.9357651152091,
+   "median_score": 0.053060935153736624,
+   "median_seconds": 32.32051706314087
+  },
+  "CMA_0.02": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 35.2020791305989,
+   "median_worst_um": 73.08315777798644,
+   "median_mean_um": 49.537595272124165,
+   "best_worst_um": 41.15898243060221,
+   "median_score": 0.023778402204130265,
+   "median_seconds": 45.05713105201721
+  },
+  "CMA_0.1": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 29.8367098220132,
+   "median_worst_um": 63.76165316024866,
+   "median_mean_um": 43.00629792480709,
+   "best_worst_um": 40.531487027616826,
+   "median_score": 0.01752073803042362,
+   "median_seconds": 51.263681173324585
+  },
+  "CMA_portfolio": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 40.20720489941892,
+   "median_worst_um": 80.4859111128288,
+   "median_mean_um": 55.651439362862845,
+   "best_worst_um": 58.1024536282923,
+   "median_score": 0.029973563569039487,
+   "median_seconds": 52.016335010528564
+  },
+  "CMA_IPOP": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 40.47705141442906,
+   "median_worst_um": 77.53251663889104,
+   "median_mean_um": 54.321905212543754,
+   "best_worst_um": 45.08931929163609,
+   "median_score": 0.02858743824811605,
+   "median_seconds": 28.98615312576294
+  },
+  "CMA_adaptive": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 37.7858122407079,
+   "median_worst_um": 106.32068125323619,
+   "median_mean_um": 66.26782015148531,
+   "best_worst_um": 50.42501872501711,
+   "median_score": 0.04422609596203008,
+   "median_seconds": 51.82287073135376
+  },
+  "TRF_restarts": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 8,
+   "median_center_um": 48.39936434227392,
+   "median_worst_um": 264.57912011097295,
+   "median_mean_um": 187.02204329007657,
+   "best_worst_um": 239.69765977517895,
+   "median_score": 0.41389830958586643,
+   "median_seconds": 36.64318609237671
+  },
+  "GA1_TRF": {
+   "budget": 19000,
+   "runs": 9,
+   "in_spec": 9,
+   "median_center_um": 688.3079408192975,
+   "median_worst_um": 759.3609533598553,
+   "median_mean_um": 640.4300351183219,
+   "best_worst_um": 759.3609533598553,
+   "median_score": 3.783932343538085,
+   "median_seconds": 23.203204870224
+  },
+  "GA two-stage (paper, 50 gen)": {
+   "budget": 19000,
+   "runs": 50,
+   "in_spec": 50,
+   "median_center_um": 36.51820623576501,
+   "median_worst_um": 247.9058882687204,
+   "median_mean_um": 177.5687175001302,
+   "best_worst_um": 118.45893561929267,
+   "median_score": 0.46258495826784174,
+   "median_seconds": 38.54392123222351
+  },
+  "GA Stage-2 only (50 gen)": {
+   "budget": 10000,
+   "runs": 50,
+   "in_spec": 50,
+   "median_center_um": 52.313494848637006,
+   "median_worst_um": 235.2088045644957,
+   "median_mean_um": 157.98787563646275,
+   "best_worst_um": 141.13927240195417,
+   "median_score": 0.3249481237334188,
+   "median_seconds": 20.928058981895447
+  },
+  "GA two-stage (paper, 300 gen)": {
+   "budget": 69000,
+   "runs": 50,
+   "in_spec": 50,
+   "median_center_um": 28.078674369003778,
+   "median_worst_um": 167.97978667703816,
+   "median_mean_um": 123.40358756238392,
+   "best_worst_um": 105.66014031525674,
+   "median_score": 0.16126427295805504,
+   "median_seconds": 142.18580281734467
+  }
+ },
+ "median_best_score_at": {
+  "TRF_all": {
+   "500": 0.8828028816853949,
+   "1000": Infinity,
+   "2000": Infinity,
+   "5000": Infinity,
+   "10000": Infinity,
+   "19000": Infinity
+  },
+  "TRF_all_fd1e-2": {
+   "500": 1.473693119154283,
+   "1000": Infinity,
+   "2000": Infinity,
+   "5000": Infinity,
+   "10000": Infinity,
+   "19000": Infinity
+  },
+  "TRF_ff": {
+   "500": Infinity,
+   "1000": Infinity,
+   "2000": Infinity,
+   "5000": Infinity,
+   "10000": Infinity,
+   "19000": Infinity
+  },
+  "STAGE": {
+   "500": 0.8334613579001956,
+   "1000": 0.4851138367853066,
+   "2000": 0.17541035131681346,
+   "5000": 0.06734708570047511,
+   "10000": 0.05386457026629618,
+   "19000": Infinity
+  },
+  "CMA_0.02": {
+   "500": 0.5606937484220604,
+   "1000": 0.26767240917112695,
+   "2000": 0.18736743226920888,
+   "5000": 0.07174088127244248,
+   "10000": 0.04212366450741506,
+   "19000": Infinity
+  },
+  "CMA_0.1": {
+   "500": 0.7374093457125758,
+   "1000": 0.31049010613236705,
+   "2000": 0.20265102622783215,
+   "5000": 0.07163398701838171,
+   "10000": 0.042400117575490594,
+   "19000": Infinity
+  },
+  "CMA_portfolio": {
+   "500": 0.4966860405553578,
+   "1000": 0.31358654650533246,
+   "2000": 0.18036688711523596,
+   "5000": 0.07574176548876685,
+   "10000": 0.033530370969779,
+   "19000": Infinity
+  },
+  "CMA_IPOP": {
+   "500": 0.4928815558022421,
+   "1000": 0.257660933484994,
+   "2000": 0.16924700499030376,
+   "5000": 0.08709708155457829,
+   "10000": 0.051639867432544256,
+   "19000": Infinity
+  },
+  "CMA_adaptive": {
+   "500": 0.6642467366726283,
+   "1000": 0.27890625577149825,
+   "2000": 0.17240146386802285,
+   "5000": 0.0812244038059799,
+   "10000": 0.04824282040734179,
+   "19000": Infinity
+  },
+  "TRF_restarts": {
+   "500": 0.7664962323075475,
+   "1000": 0.6563807195369096,
+   "2000": 0.5248572709497835,
+   "5000": 0.5090730956585862,
+   "10000": 0.4203290143953185,
+   "19000": Infinity
+  },
+  "GA1_TRF": {
+   "500": Infinity,
+   "1000": Infinity,
+   "2000": 3.783932343538085,
+   "5000": 3.783932343538085,
+   "10000": Infinity,
+   "19000": Infinity
+  }
+ }
+}
