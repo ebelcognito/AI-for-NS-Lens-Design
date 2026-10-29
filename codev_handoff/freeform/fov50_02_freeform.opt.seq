@@ -1,0 +1,60 @@
+! Optimisation setup for fold24_nd151_fov50_02_3fold_fit0.633_CLEAN.
+! Load the prescription and confirm it TRACES first -- this file only declares
+! variables. The error function and the AUT invocation are deliberately not
+! written here: that syntax has not been confirmed on this build, and this project
+! does not guess CODE V syntax twice.
+!
+! STAGE 1 -- meridional terms only. These are the ones our own 2-D tracer can
+! independently reproduce, so a stage-1 result is checkable outside CODE V.
+
+! face A (owner S2; its repeats follow by pickup)
+VAR C9 S2          ! y^3
+VAR C14 S2          ! y^4
+VAR C20 S2          ! y^5
+VAR C27 S2          ! y^6
+! face B (owner S4; its repeats follow by pickup)
+VAR C9 S4          ! y^3
+VAR C14 S4          ! y^4
+VAR C20 S4          ! y^5
+VAR C27 S4          ! y^6
+
+! Hold the base radii. They and the quadratic coefficients describe the same
+! degree of freedom; freeing both makes the Jacobian singular.
+
+! ---- constraints that are NOT optional --------------------------------------
+! 1. TIR margin. n = 1.509300 -> critical 41.4953 deg.
+!    S3 (face D) chief-ray incidence 48.643 deg  = +7.147 deg of margin
+!    S4 (face B) chief-ray incidence 54.173 deg  = +12.678 deg of margin
+!    S5 (face A) chief-ray incidence 45.173 deg  = +3.678 deg of margin
+!    Those are CHIEF-RAY margins. The worst case over the whole bundle and all
+!    fields is tighter still -- the archive records +2.353 deg -- so the binding
+!    constraint is roughly 2.3 deg, not the 3.7 deg the chief ray suggests.
+!    Constrain incidence > critical at every field and pupil point on each TIRO
+!    surface. An optimiser handed free tilts will walk a face below critical to buy
+!    spot size, and the result traces perfectly while being physically impossible.
+! 2. No obscuration and no surface interference -- the faces must still bound one
+!    solid, and the beam must not clip a face it is not interacting with.
+! 3. Hold the overall geometry. The packaging is what the search was FOR.
+
+! ---- stage 2, only after stage 1 converges -----------------------------------
+! Unlock the even-x terms below. They are genuine out-of-plane freeform freedom
+! that NO model in this repo can see: the engine is 2-D meridional, so from here
+! on CODE V is the only source of truth for the sagittal.
+! VAR C3 S2        ! x^2
+! VAR C7 S2        ! x^2*y
+! VAR C10 S2        ! x^4
+! VAR C12 S2        ! x^2*y^2
+! VAR C16 S2        ! x^4*y
+! VAR C18 S2        ! x^2*y^3
+! VAR C21 S2        ! x^6
+! VAR C23 S2        ! x^4*y^2
+! VAR C25 S2        ! x^2*y^4
+! VAR C3 S4        ! x^2
+! VAR C7 S4        ! x^2*y
+! VAR C10 S4        ! x^4
+! VAR C12 S4        ! x^2*y^2
+! VAR C16 S4        ! x^4*y
+! VAR C18 S4        ! x^2*y^3
+! VAR C21 S4        ! x^6
+! VAR C23 S4        ! x^4*y^2
+! VAR C25 S4        ! x^2*y^4

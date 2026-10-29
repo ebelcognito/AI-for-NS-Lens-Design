@@ -1,0 +1,23 @@
+# C15100 freeform FOV pilot — September 15
+
+User asked for a freeform refinement-layer example on design C, considering all three surfaces. User explicitly selected 6° then 8° full FOV with <=0.5 mm worst per-field RMS and >=80% worst-field folded throughput. User emphasized that TIR must change with the iterated geometry. User prefers paired before/after setup PNGs in `runs/`, not separate before and after files or playpen-only output.
+
+Output: `runs/c_freeform_fov_20260915/`. All searches complete. No dense-audited success at 6° or 8° in these budgets. Do not quote optimization-grid spot sizes as achieved audited performance.
+
+New geometry: `nslens/freeform_body/polynomial_faces.py`. Exact circular base plus chord-normal polynomial departure on each face, 3 coefficients per face. Departure is 16 f²(1-f)² times a quadratic, so endpoints and departure slopes are zero. Three circular sags also vary; corners, source, detector, beam and index stay fixed. All-three arm has 12 parameters. Continuous numerical intersections and analytic surface normals; full non-sequential Fresnel/TIR branch tracing reruns for every candidate. No frozen ray graph. Qualifying delivered energy needs >=2 TIR events with >=0.5° margin, >=80% throughput and root support, numerical ledger checks, and ordered centroids. Nonqualifying branches do not count toward throughput. Spot RMS includes all qualifying detector energy, including weak displaced groups.
+
+First matched pilot: circular vs all-three freeform, 3 seeds per arm, 240 proposals each at 6°, then 240 at 8° continuing each arm's own 6° best (2880 proposals). 9 fields x 13 rays during search. Tight envelope was the already-refined C15100 dimensions (~16.6154 x 38.8127 mm), stricter than the earlier original C envelope. None passed dense audits.
+
+Separate post-hoc candidate reranking under original C dimensions (~17.2378 x 39.7498 mm) found apparently promising candidates on the search grid; dense audits still failed. Original-C envelope results remain separate and do not replace declared pilot pass/fail results.
+
+Separate denser follow-up: 17 fields x 31 rays, 144 proposals each for two seeds, original C envelope. Both failed final audit despite optimization-grid RMS 0.167 / 0.217 mm. Selected seed17200: 17x101 worst RMS 0.82766 mm, 33x151 worst RMS 0.76818 mm, min throughput 0.86975, min root support 0.96026. Only spot constraint failed in its stress audit; numerical scan/capacity agreement passed. Seed17100 stress RMS 0.87806 mm and throughput 0.89839. Do not claim robust 6° imaging from these.
+
+Dense audits: 17x101 and 33x151; repeat stress with per-face intersection scan 64->128 and branch capacity 200k->400k. Comparison tolerance 1e-7 relative / 1e-8 absolute for per-field physical metrics. This checks numerical intersection/capacity agreement, not full convergence of aperture integration: narrow edge-field ray groups still cause material differences with ray density. Future work should target those groups during optimization, e.g. adaptive pupil sampling. All-three shape alone is insufficient to claim robustness.
+
+TIR baseline main route: refract face1 -> TIR face3 -> TIR face2 -> refract face3. Face numbers are canonical CCW and shown on renders. `dense_polish/tir_audit.json` contains full dense actual margins and edge-field outlier paths when present. `dense_polish/robustness.json` explicitly defers manufacturing-style perturbation screens because no nominal dense pass was obtained.
+
+Files: `protocol.json`, `summary.json`, `RESULTS.md` for first pilot; `original_C_envelope/results.json`; `dense_polish/summary.json`, `selected.json`; paired setup PNGs and coefficient plots in `renders/`. `renders/C15100_4deg_to_freeform_6deg.png` compares original passing 4° design to selected failing 6° design and overlays the largest negative-edge RMS contributor in black dashed lines. Snapshot, scripts and verification records retained.
+
+Validation: 3 new geometry tests, 16 arc polygon checks, 10 polygon discovery tests passed. Numerical freeform zero-departure optical smoke agreed with circular evaluation at 4°, 6°, 8°. Current tests do not establish a global proof of intersection completeness for arbitrary high-frequency surfaces; this representation is deliberately bounded and low order.
+
+Final dense TIR audit: index 1.5, critical angle 41.81031°. Minimum accepted margin baseline4° 3.82776° versus selected6° 0.95923°. At −3°, 1.82% of launched energy follows an alternate three-TIR path and generates displaced spots. Two roots contribute ~84% of spot variance. See EXPERIMENT_SUMMARY.md for completed synthesis.

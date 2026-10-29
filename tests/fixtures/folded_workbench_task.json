@@ -1,0 +1,54 @@
+{
+  "task_id": "folded-prism-smoke/case0",
+  "family_id": "archive-derived-prism-001",
+  "split": "smoke",
+  "base": [
+    81.82469246695092,
+    44.64084818980294,
+    6.806363237548116,
+    -2.453394480042525,
+    5.67464787621113,
+    12.617601854092266,
+    46.736153843043475,
+    -4.794500280482944,
+    1.5
+  ],
+  "start": [
+    -1.5616729443926534,
+    -0.4640495190741225,
+    1.9624843056263452,
+    -2.0,
+    -0.5632732915715903,
+    -2.0,
+    -1.3151371949169701,
+    -2.0
+  ],
+  "requirements": {
+    "min_field_folded_throughput": 0.3,
+    "max_field_sigma_deg": 1.0,
+    "min_fov_deg": 12.0,
+    "min_tir_bounces": 1,
+    "max_unresolved_fraction": 0.0001,
+    "max_closure_error": 1e-09
+  },
+  "layout": {
+    "source_points": [
+      [
+        49.0,
+        50.0
+      ],
+      [
+        55.0,
+        50.0
+      ],
+      [
+        61.0,
+        50.0
+      ]
+    ],
+    "source_aim_deg": -90.0,
+    "fan_half_angle_deg": 12.0,
+    "pupil_x": 120.0,
+    "pupil_half_height": 9.0
+  }
+}

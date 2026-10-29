@@ -1,0 +1,21 @@
+{
+  "seeds": ["US20210096338A1", "US9239453B2", "US10739578B2", "WO2018103551A1", "US20180045964A1"],
+  "queries": [
+    {"category": "folded_camera", "q": "\"folded optical system\" prism"},
+    {"category": "folded_camera", "q": "\"periscope\" \"optical\" lens"},
+    {"category": "powered_prism", "q": "\"freeform prism\""},
+    {"category": "powered_prism", "q": "\"free-form prism\" \"coefficients\""},
+    {"category": "powered_prism", "q": "\"prism\" \"curved reflecting surface\""},
+    {"category": "near_eye", "q": "\"freeform eyepiece\""},
+    {"category": "near_eye", "q": "\"near-eye\" \"prism\" \"table\""},
+    {"category": "tir_imaging", "q": "\"total internal reflection\" \"image-forming\""},
+    {"category": "catadioptric", "q": "\"catadioptric\" \"compact\" \"prescription\""},
+    {"category": "catadioptric", "q": "\"Mangin\" \"optical\""},
+    {"category": "reflective_relay", "q": "\"off-axis\" \"freeform\" \"relay\""},
+    {"category": "polarization_folded", "q": "\"pancake\" \"reflective polarizer\""},
+    {"category": "nonimaging", "q": "\"TIR\" \"collimator\" \"freeform\""},
+    {"category": "lightguide", "q": "\"light guide\" \"multiple reflections\""},
+    {"category": "folded_camera_cpc", "q": "prism", "cpc": "G02B13/0065"},
+    {"category": "catadioptric_cpc", "q": "freeform", "cpc": "G02B17/08"}
+  ]
+}

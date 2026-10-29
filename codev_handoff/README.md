@@ -1,5 +1,12 @@
 # CODE V handoff package
 
+> **Start at the `codev` skill, not here.** `.claude/skills/codev/SKILL.md` carries the
+> conventions, the loop and the current target design in a form small enough to load every
+> time; its `references/` hold the condensed syntax, geometry, failure and freeform notes.
+> This package remains the home of the *executable* parts — `verify_v2.py`,
+> `check_seq_v2.py`, the emitters, the `.seq` files and the Tier A benchmark — plus the
+> unabridged history. Read the long docs below only when the skill's references send you.
+
 Everything needed to get an off-axis freeform-prism design tracing in **CODE V 2026**,
 assembled for a operator/agent that has **direct CODE V access and a command line** —
 which the authors of this package did not.

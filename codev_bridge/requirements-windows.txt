@@ -1,0 +1,3 @@
+# SFTP transport. Paramiko 5.0 publishes a universal Python 3 wheel and declares
+# Python 3.13 support. Keep this pinned until the bridge is retested on an upgrade.
+paramiko==5.0.0

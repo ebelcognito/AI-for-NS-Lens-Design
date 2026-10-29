@@ -1,0 +1,46 @@
+# CODE V freeform export : fold24_nd151_fov50_02_3fold_fit0.633_CLEAN
+# signature   : T@A -> TIR@D -> TIR@B -> TIR@A -> T@B
+# genotype    : ray_y=5.4292  ang=47.1510  cx=38.9405  thick=15.5461  fsag=-2.1177  bsag=1.8127  tilt_a=24.3528  tilt_b=10.7144  n=1.5093
+# frame       : origin at source (0, 5.4292), +Z along the input ray (engine rotated by -47.1510 deg)
+# index       : n=1.509300  critical=41.4953 deg
+# closure     : 85.7% of the bundle follows this surface list
+#               per field: -5.00:91%  -3.75:91%  -2.50:90%  -1.25:90%  +0.00:90%  +1.25:90%  +2.50:87%  +3.75:75%  +5.00:67%
+
+PHYSICAL FACES  (one vertex, one radius, one coefficient set each)
+face  kind       Z(mm)       Y(mm)   ADE(deg)       RDY(mm)        centre of curvature
+--------------------------------------------------------------------------------------
+   A   cyl     18.6558    -28.0952    22.7982     -281.8025       (-240.7914, 81.9040)
+   B   cyl     29.0208    -39.2692    36.4366     -262.5574      (-182.0101, 116.9433)
+   T  flat      7.0548    -59.7019   -42.8490           INF                          -
+   D  flat     37.9488     -4.7809   -42.8490           INF                          -
+
+SURFACE LIST  (the dominant-ray event order; a repeat picks up its owner)
+  S face    event    incid   margin  medium_after  local y lo        hi      REY       ADY  pickup
+--------------------------------------------------------------------------------------------------
+  2    A  refract   16.896        -         GLASS      24.261    33.758    5.748    29.010       -
+  3    D      tir   48.643   +7.147         GLASS      -3.816    11.662    8.739     3.923       -
+  4    B      tir   54.173  +12.678         GLASS      -0.893    22.642   12.768    10.875       -
+  5    A      tir   45.173   +3.678         GLASS     -19.874    -2.076    9.899   -10.975      S2
+  6    B  refract   30.374        -           AIR     -23.912    -8.194    8.859   -16.053      S4
+
+IMAGE  tilted plane   Z=18.7723  Y=-95.6090  ADE=89.9157  half-length 12.00 mm
+
+USED ZONES PER PHYSICAL FACE  (local y; a gap is unconstrained polynomial)
+  face A: S5[-19.87,-2.08]  S2[24.26,33.76]    full span -19.87 .. 33.76 mm
+    !! 26.34 mm gap between S5 and S2. The polynomial is unconstrained
+       there and a 6th-order fit will ring across it. Either constrain sag/slope
+       in the gap or keep the order down until the zones are joined.
+  face D: S3[-3.82,11.66]    full span -3.82 .. 11.66 mm
+  face B: S6[-23.91,-8.19]  S4[-0.89,22.64]    full span -23.91 .. 22.64 mm
+    !! 7.30 mm gap between S6 and S4. The polynomial is unconstrained
+       there and a 6th-order fit will ring across it. Either constrain sag/slope
+       in the gap or keep the order down until the zones are joined.
+
+FREEFORM VARIABLES
+  stage 1, meridional (m=0): C9(y^3), C14(y^4), C20(y^5), C27(y^6)
+  stage 2, sagittal (m even>0): C3(x^2), C7(x^2*y), C10(x^4), C12(x^2*y^2), C16(x^4*y), C18(x^2*y^3), C21(x^6), C23(x^4*y^2), C25(x^2*y^4)
+  held: C2 (degenerate with ADE), C5 (degenerate with RDY), all odd-x terms
+        (the system is symmetric about the yz plane).
+  note: C3 (x^2) is a STAGE-2 variable, not a held one. An XY polynomial's base is
+        rotationally symmetric, so replacing a toroid with RDY+polynomial drops the
+        independent RDX. C3 is what carries that anamorphic freedom back.

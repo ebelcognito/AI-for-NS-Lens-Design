@@ -1,0 +1,205 @@
+! CODE V freeform-prism export : fold24_nd151_fov50_02_3fold_fit0.633_CLEAN
+! dom_signature : T@A -> TIR@D -> TIR@B -> TIR@A -> T@B
+! Frame: origin at the source, +Z along the input chief ray (engine frame rotated
+!        by -47.151000 deg). CODE V Z=along-axis, Y=meridional, X=out of plane.
+! Placement: absolute. Every surface DAR + THI 0, so one global frame and a
+!            repeated physical face can share ONE vertex and ONE coefficient set.
+! Sequential closure: 85.7% of the traced bundle follows this
+!            surface list; the rest is not represented by this file.
+!
+! UNVERIFIED IN CODE V: the SPS XYP block and the C<j> coefficient spelling below.
+!            Everything else uses constructs confirmed by a live run. The term
+!            ORDER is confirmed independently (see export_freeform_codev.xy_terms).
+! EXPECT: THI is 0 on every surface, because absolute placement is what lets a
+!            repeated face share one coefficient set. CODE V may therefore draw the
+!            faces as separate sheets rather than one solid block -- that is a
+!            rendering consequence of THI 0, not a placement error. Judge this file
+!            on the global coordinate listing and whether rays reach SI, not on
+!            whether View Lens shows a prism.
+LEN NEW
+DIM M
+WL 587.56
+REF 1
+! EPD is the bundle's cross-section PERPENDICULAR to its own direction. The engine
+!   emits along a vertical segment of beam_w = 8.000 mm, so that cross-section is
+!   beam_w*cos(aim) and it varies with field: -5.00:5.931  -3.75:5.8125  -2.50:5.6912  -1.25:5.5672  +0.00:5.4405  +1.25:5.3113  +2.50:5.1795  +3.75:5.0453  +5.00:4.9087
+!   CODE V has one EPD for all fields, so this matches the engine at the centre
+!   field only. Worth fixing at the source if it ever matters.
+EPD 5.440548
+YAN -5.000000 -3.750000 -2.500000 -1.250000 0.000000 1.250000 2.500000 3.750000 5.000000
+! ---- constant-index model glass. The engine carries ONE index and never splits a
+!      ray by wavelength, so this is monochromatic by construction, not by choice.
+PRV
+PWL 587.56
+'FOLDN' 1.509300
+END
+SO 0 1e18
+! ---- S1: real stop, in air, ahead of all optics and ON axis (the rotated frame
+!      is what buys that: in the engine frame this stop is decentered by ray_y).
+CIR S1 2.720274
+STO S1
+THI S1 0
+
+! ---- S2: refract @ face A   incidence 16.896 deg
+S -281.802517 0 'FOLDN'
+ZDE S2 18.655774
+YDE S2 -28.095187
+ADE S2 22.798200
+DAR S2
+REY S2 5.7485
+REX S2 3.7203
+ADY S2 29.0097
+! face A freeform. Zero coefficients == the arc this design was
+! discovered with, so the starting trace is unchanged and every subsequent
+! change is attributable to the optimiser.
+SPS XYP S2
+C3 S2 0.0   ! x^2
+C7 S2 0.0   ! x^2*y
+C9 S2 0.0   ! y^3
+C10 S2 0.0   ! x^4
+C12 S2 0.0   ! x^2*y^2
+C14 S2 0.0   ! y^4
+C16 S2 0.0   ! x^4*y
+C18 S2 0.0   ! x^2*y^3
+C20 S2 0.0   ! y^5
+C21 S2 0.0   ! x^6
+C23 S2 0.0   ! x^4*y^2
+C25 S2 0.0   ! x^2*y^4
+C27 S2 0.0   ! y^6
+
+! ---- S3: tir @ face D   incidence 48.643 deg, +7.147 vs critical
+S 0 0 TIRO 'FOLDN'
+ZDE S3 37.948833
+YDE S3 -4.780887
+ADE S3 -42.849000
+DAR S3
+REY S3 8.7389
+REX S3 3.7203
+ADY S3 3.9229
+
+! ---- S4: tir @ face B   incidence 54.173 deg, +12.678 vs critical
+S -262.557391 0 TIRO 'FOLDN'
+ZDE S4 29.020766
+YDE S4 -39.269177
+ADE S4 36.436600
+DAR S4
+REY S4 12.7675
+REX S4 3.7203
+ADY S4 10.8746
+! face B freeform. Zero coefficients == the arc this design was
+! discovered with, so the starting trace is unchanged and every subsequent
+! change is attributable to the optimiser.
+SPS XYP S4
+C3 S4 0.0   ! x^2
+C7 S4 0.0   ! x^2*y
+C9 S4 0.0   ! y^3
+C10 S4 0.0   ! x^4
+C12 S4 0.0   ! x^2*y^2
+C14 S4 0.0   ! y^4
+C16 S4 0.0   ! x^4*y
+C18 S4 0.0   ! x^2*y^3
+C20 S4 0.0   ! y^5
+C21 S4 0.0   ! x^6
+C23 S4 0.0   ! x^4*y^2
+C25 S4 0.0   ! x^2*y^4
+C27 S4 0.0   ! y^6
+
+! ---- S5: tir @ face A   incidence 45.173 deg, +3.678 vs critical
+S -281.802517 0 TIRO 'FOLDN'
+ZDE S5 18.655774
+YDE S5 -28.095187
+ADE S5 22.798200
+DAR S5
+REY S5 9.8988
+REX S5 3.7203
+ADY S5 -10.9752
+! face A freeform. Zero coefficients == the arc this design was
+! discovered with, so the starting trace is unchanged and every subsequent
+! change is attributable to the optimiser.
+SPS XYP S5
+C3 S5 0.0   ! x^2
+C7 S5 0.0   ! x^2*y
+C9 S5 0.0   ! y^3
+C10 S5 0.0   ! x^4
+C12 S5 0.0   ! x^2*y^2
+C14 S5 0.0   ! y^4
+C16 S5 0.0   ! x^4*y
+C18 S5 0.0   ! x^2*y^3
+C20 S5 0.0   ! y^5
+C21 S5 0.0   ! x^6
+C23 S5 0.0   ! x^4*y^2
+C25 S5 0.0   ! x^2*y^4
+C27 S5 0.0   ! y^6
+! same physical face as S2 -- couple it, or the optimiser grows two.
+PIK RDY S5 S2
+PIK YDE S5 S2
+PIK ZDE S5 S2
+PIK ADE S5 S2
+PIK C3 S5 S2
+PIK C7 S5 S2
+PIK C9 S5 S2
+PIK C10 S5 S2
+PIK C12 S5 S2
+PIK C14 S5 S2
+PIK C16 S5 S2
+PIK C18 S5 S2
+PIK C20 S5 S2
+PIK C21 S5 S2
+PIK C23 S5 S2
+PIK C25 S5 S2
+PIK C27 S5 S2
+
+! ---- S6: refract @ face B   incidence 30.374 deg
+S -262.557391 0
+ZDE S6 29.020766
+YDE S6 -39.269177
+ADE S6 36.436600
+DAR S6
+REY S6 8.8588
+REX S6 3.7203
+ADY S6 -16.0527
+! face B freeform. Zero coefficients == the arc this design was
+! discovered with, so the starting trace is unchanged and every subsequent
+! change is attributable to the optimiser.
+SPS XYP S6
+C3 S6 0.0   ! x^2
+C7 S6 0.0   ! x^2*y
+C9 S6 0.0   ! y^3
+C10 S6 0.0   ! x^4
+C12 S6 0.0   ! x^2*y^2
+C14 S6 0.0   ! y^4
+C16 S6 0.0   ! x^4*y
+C18 S6 0.0   ! x^2*y^3
+C20 S6 0.0   ! y^5
+C21 S6 0.0   ! x^6
+C23 S6 0.0   ! x^4*y^2
+C25 S6 0.0   ! x^2*y^4
+C27 S6 0.0   ! y^6
+! same physical face as S4 -- couple it, or the optimiser grows two.
+PIK RDY S6 S4
+PIK YDE S6 S4
+PIK ZDE S6 S4
+PIK ADE S6 S4
+PIK C3 S6 S4
+PIK C7 S6 S4
+PIK C9 S6 S4
+PIK C10 S6 S4
+PIK C12 S6 S4
+PIK C14 S6 S4
+PIK C16 S6 S4
+PIK C18 S6 S4
+PIK C20 S6 S4
+PIK C21 S6 S4
+PIK C23 S6 S4
+PIK C25 S6 S4
+PIK C27 S6 S4
+
+! ---- image: the plane solved by render_tilted_detector.py, NOT the search's
+!      vertical detector. Tilt and position are part of the design.
+SI 0 0
+ZDE SI 18.772327
+YDE SI -95.609045
+ADE SI 89.915700
+DAR SI
+CIR SI 12.0000
+GO

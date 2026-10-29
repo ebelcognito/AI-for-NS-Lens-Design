@@ -1,0 +1,232 @@
+{
+  "meta": {
+    "design": "fold24_nd151_fov50_02_3fold_fit0.633_CLEAN",
+    "signature": "T@A -> TIR@D -> TIR@B -> TIR@A -> T@B",
+    "params": {
+      "ray_y": 5.4292,
+      "ang": 47.151,
+      "cx": 38.9405,
+      "thick": 15.5461,
+      "fsag": -2.1177,
+      "bsag": 1.8127,
+      "tilt_a": 24.3528,
+      "tilt_b": 10.7144,
+      "n": 1.5093
+    },
+    "critical": 41.49531478660255,
+    "epd": 5.440548398510415,
+    "epd_by_field": {
+      "-5.00": 5.931,
+      "-3.75": 5.8125,
+      "-2.50": 5.6912,
+      "-1.25": 5.5672,
+      "+0.00": 5.4405,
+      "+1.25": 5.3113,
+      "+2.50": 5.1795,
+      "+3.75": 5.0453,
+      "+5.00": 4.9087
+    },
+    "beam_w": 8.0,
+    "fields": [
+      -5.0,
+      -3.75,
+      -2.5,
+      -1.25,
+      0.0,
+      1.25,
+      2.5,
+      3.75,
+      5.0
+    ],
+    "closure": 0.8573,
+    "closure_per_field": {
+      "-5.00": 0.9069,
+      "-3.75": 0.9059,
+      "-2.50": 0.9048,
+      "-1.25": 0.9037,
+      "+0.00": 0.9026,
+      "+1.25": 0.9015,
+      "+2.50": 0.8712,
+      "+3.75": 0.7535,
+      "+5.00": 0.6654
+    },
+    "bundle_margin": "+2.353 deg over the bundle (archive crit_margin); the chief-ray margins below are all looser than that"
+  },
+  "faces": {
+    "A": {
+      "face": "A",
+      "kind": "cyl",
+      "Z": 18.655773689859434,
+      "Y": -28.095186975623573,
+      "beta_deg": -22.79820000000001,
+      "ADE": 22.79820000000001,
+      "RDY": -281.8025168734452,
+      "centre_of_curvature": [
+        -240.79139625002105,
+        81.90401541418984
+      ]
+    },
+    "B": {
+      "face": "B",
+      "kind": "cyl",
+      "Z": 29.020766464426565,
+      "Y": -39.269177041538754,
+      "beta_deg": -36.4366,
+      "ADE": 36.4366,
+      "RDY": -262.5573905546129,
+      "centre_of_curvature": [
+        -182.01014513286088,
+        116.94329904556952
+      ]
+    },
+    "T": {
+      "face": "T",
+      "kind": "flat",
+      "Z": 7.054765859838152,
+      "Y": -59.70190980485579,
+      "beta_deg": 42.84899999999999,
+      "ADE": -42.84899999999999,
+      "RDY": 0.0
+    },
+    "D": {
+      "face": "D",
+      "kind": "flat",
+      "Z": 37.94883286625968,
+      "Y": -4.78088722861947,
+      "beta_deg": 42.84899999999999,
+      "ADE": -42.84899999999999,
+      "RDY": 0.0
+    }
+  },
+  "surfaces": [
+    {
+      "i": 2,
+      "face": "A",
+      "event": "refract",
+      "reflective": false,
+      "incidence": 16.8965,
+      "tir_margin": null,
+      "medium_before": "AIR",
+      "medium_after": "GLASS",
+      "local_y_lo": 24.2612,
+      "local_y_hi": 33.7582,
+      "REY": 5.7485,
+      "ADY": 29.0097,
+      "pickup_from": null
+    },
+    {
+      "i": 3,
+      "face": "D",
+      "event": "tir",
+      "reflective": true,
+      "incidence": 48.6428,
+      "tir_margin": 7.1475,
+      "medium_before": "GLASS",
+      "medium_after": "GLASS",
+      "local_y_lo": -3.816,
+      "local_y_hi": 11.6618,
+      "REY": 8.7389,
+      "ADY": 3.9229,
+      "pickup_from": null
+    },
+    {
+      "i": 4,
+      "face": "B",
+      "event": "tir",
+      "reflective": true,
+      "incidence": 54.1728,
+      "tir_margin": 12.6775,
+      "medium_before": "GLASS",
+      "medium_after": "GLASS",
+      "local_y_lo": -0.8929,
+      "local_y_hi": 22.6421,
+      "REY": 12.7675,
+      "ADY": 10.8746,
+      "pickup_from": null
+    },
+    {
+      "i": 5,
+      "face": "A",
+      "event": "tir",
+      "reflective": true,
+      "incidence": 45.1731,
+      "tir_margin": 3.6778,
+      "medium_before": "GLASS",
+      "medium_after": "GLASS",
+      "local_y_lo": -19.874,
+      "local_y_hi": -2.0763,
+      "REY": 9.8988,
+      "ADY": -10.9752,
+      "pickup_from": 2
+    },
+    {
+      "i": 6,
+      "face": "B",
+      "event": "refract",
+      "reflective": false,
+      "incidence": 30.3744,
+      "tir_margin": null,
+      "medium_before": "GLASS",
+      "medium_after": "AIR",
+      "local_y_lo": -23.9116,
+      "local_y_hi": -8.1939,
+      "REY": 8.8588,
+      "ADY": -16.0527,
+      "pickup_from": 4
+    }
+  ],
+  "image": {
+    "Z": 18.772327,
+    "Y": -95.609045,
+    "ADE": 89.9157,
+    "half_len": 12.0
+  },
+  "variables": {
+    "meridional": [
+      9,
+      14,
+      20,
+      27
+    ],
+    "sagittal": [
+      3,
+      7,
+      10,
+      12,
+      16,
+      18,
+      21,
+      23,
+      25
+    ],
+    "terms": {
+      "1": "x",
+      "2": "y",
+      "3": "x^2",
+      "4": "x*y",
+      "5": "y^2",
+      "6": "x^3",
+      "7": "x^2*y",
+      "8": "x*y^2",
+      "9": "y^3",
+      "10": "x^4",
+      "11": "x^3*y",
+      "12": "x^2*y^2",
+      "13": "x*y^3",
+      "14": "y^4",
+      "15": "x^5",
+      "16": "x^4*y",
+      "17": "x^3*y^2",
+      "18": "x^2*y^3",
+      "19": "x*y^4",
+      "20": "y^5",
+      "21": "x^6",
+      "22": "x^5*y",
+      "23": "x^4*y^2",
+      "24": "x^3*y^3",
+      "25": "x^2*y^4",
+      "26": "x*y^5",
+      "27": "y^6"
+    }
+  }
+}

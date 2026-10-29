@@ -1,0 +1,43 @@
+{
+  "schema_version": "nslens.codev_transition.v1",
+  "transition_id": "design_042_run03_step0017_try0003",
+  "episode_id": "design_042_run03",
+  "design_id": "design_042",
+  "step": 17,
+  "candidate_index": 3,
+  "state": {
+    "parameter_names": ["XYP_1", "XYP_2", "ADE_S4", "YDE_S4"],
+    "parameters": [0.0142, -0.0031, 1.228, 0.0],
+    "parameter_scales": [0.02, 0.02, 2.0, 1.0],
+    "active_mask": [1, 1, 1, 0],
+    "merit_before": 1.743,
+    "metrics_before": {"rms_spot": 2.1, "throughput": 0.81},
+    "constraint_slacks": {"tir_margin_min_deg": 1.4, "clearance_mm": 3.8},
+    "topology_id": "T@A -> TIR@D -> TIR@B -> T@B",
+    "budget_remaining": 83
+  },
+  "action": {
+    "normalized_delta": [-0.12, 0.05, 0.08, 0.0],
+    "trust_scale": 0.5,
+    "source": "policy"
+  },
+  "result": {
+    "merit_after": 1.612,
+    "delta_merit": 0.131,
+    "metrics_after": {"rms_spot": 1.93, "throughput": 0.82},
+    "constraint_slacks_after": {"tir_margin_min_deg": 1.3, "clearance_mm": 3.7},
+    "trace_ok": true,
+    "topology_preserved": true,
+    "bounds_clipped": false,
+    "accepted": true,
+    "failure_code": null,
+    "runtime_s": 2.8
+  },
+  "provenance": {
+    "codev_version": "2026",
+    "merit_function_version": "mf_v4",
+    "translator_version": "json2codev_v7",
+    "baseline_json_sha256": "replace-on-remote",
+    "random_seed": 1234
+  }
+}

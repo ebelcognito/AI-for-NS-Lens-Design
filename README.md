@@ -74,6 +74,22 @@ Python needs `numpy`, plus `torch`/`matplotlib`/`pyyaml` for the search and auto
 pipelines. See [`RUN_NOTES.md`](RUN_NOTES.md) for the exact `PYTHONPATH` invocations —
 `ns_probe` and `ns_autodiff` use bare imports and need specific paths.
 
+The released EvoTF emitter is an optional, reproducibly pinned search arm:
+
+```bash
+python3 -m pip install -e '.[evotf]'
+python3 -m nslens.analysis.run_fold_evotf_baseline --evals 20
+```
+
+It uses the official `evosax==0.3.1` `EvoTF_ES` implementation and bundled
+`2024_03_SNES_small.pkl` checkpoint (SHA-256
+`a802c7d2d312e42eb78f40fc7d8e9b245419f04ba9a2a0aa32f9933b254459ec`). CMA remains
+the default; importing `nslens` does not require JAX or evosax.
+
+For lossless CMA transition collection, leakage-safe dataset construction,
+numeric/optical training, checkpoint contracts, and the matched four-arm embedding
+ablation, see [`nslens/learning/optical_evotf/README.md`](nslens/learning/optical_evotf/README.md).
+
 ### Note on the vendored engine
 
 `ray-optics/` is vendored from

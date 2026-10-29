@@ -1,0 +1,34 @@
+// Standalone policy for a new tailnet containing only the HIRES103 worker and
+// nslens-cloud. If the tailnet already has other policy, merge carefully instead
+// of replacing it. In all cases remove any wildcard allow-all grant.
+{
+  "tagOwners": {
+    "tag:nslens-cloud": []
+  },
+
+  "hosts": {
+    "codev-worker": "100.108.189.42"
+  },
+
+  "grants": [
+    {
+      "src": ["codev-worker"],
+      "dst": ["tag:nslens-cloud"],
+      "ip": ["tcp:22"]
+    }
+  ],
+
+  "tests": [
+    {
+      "src": "codev-worker",
+      "proto": "tcp",
+      "accept": ["tag:nslens-cloud:22"],
+      "deny": ["tag:nslens-cloud:23"]
+    },
+    {
+      "src": "tag:nslens-cloud",
+      "proto": "tcp",
+      "deny": ["codev-worker:22"]
+    }
+  ]
+}

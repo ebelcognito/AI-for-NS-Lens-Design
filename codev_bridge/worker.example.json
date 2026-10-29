@@ -1,0 +1,27 @@
+{
+  "worker_id": "codev-worker-1",
+  "server": {
+    "host": "100.64.0.1",
+    "port": 22,
+    "username": "codevbridge",
+    "private_key_file": "C:\\Users\\YOUR_NAME\\.ssh\\codevbridge_ed25519",
+    "known_hosts_file": "C:\\Users\\YOUR_NAME\\.ssh\\known_hosts"
+  },
+  "remote_root": "/bridge",
+  "poll_seconds": 5,
+  "max_job_bytes": 65536,
+  "max_job_age_seconds": 86400,
+  "max_timeout_seconds": 600,
+  "max_result_bytes": 262144,
+  "max_artifact_bytes": 16777216,
+  "local_state_directory": "C:\\Users\\YOUR_NAME\\AppData\\Local\\NSLensBridge\\state",
+  "allowed_cases": {
+    "tier_a_v2c": {
+      "path": "C:\\Users\\YOUR_NAME\\codev\\codev_handoff\\benchmark_tierA_v2c.seq",
+      "sha256": "REPLACE_WITH_LOWERCASE_SHA256"
+    }
+  },
+  "adapter": {
+    "type": "mock"
+  }
+}

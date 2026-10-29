@@ -1,0 +1,33 @@
+{
+  "built": "2026-08-14 13:08:01",
+  "canonical_fields": [
+    -8.0,
+    -6.0,
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0
+  ],
+  "hardened": {
+    "field_aggregate": "worst",
+    "max_sag_ratio": 0.268,
+    "det_clearance": 12.0,
+    "convergence_gate": "clean_pack",
+    "gate_all_fields": true,
+    "require_exit_convergence": true,
+    "n_rays": 17
+  },
+  "scored_trace_rows": 69048,
+  "distinct_signatures_all": 812,
+  "candidates": 176,
+  "genotypes_rescored": 1044,
+  "per_signature": 6,
+  "min_fitness": 0.2,
+  "min_seen": 10,
+  "passed_hardened": 17,
+  "topology_stable": 16,
+  "wall_seconds": 15.1
+}
